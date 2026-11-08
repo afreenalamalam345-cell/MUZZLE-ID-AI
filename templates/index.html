@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MUZZLE-ID AI | Smart Dairy Management</title>
+
+<style>
+:root {
+    --green:#16794b;
+    --dark:#104d34;
+    --light:#eaf7ef;
+    --bg:#f4f8f5;
+    --white:#ffffff;
+    --text:#20352a;
+    --muted:#718078;
+    --orange:#f3a640;
+    --red:#dc5555;
+    --shadow:0 5px 22px rgba(20,70,45,.09);
+}
+
+* {
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+}
+
+body {
+    font-family:Arial, sans-serif;
+    background:var(--bg);
+    color:var(--text);
+}
+
+header {
+    background:linear-gradient(120deg,#104d34,#168653);
+    color:white;
+    padding:22px 18px;
+    border-radius:0 0 25px 25px;
+}
+
+.top {
+    display:flex;
+    align-items:center;
+    gap:12px;
+}
+
+.logo {
+    width:48px;
+    height:48px;
+    background:white;
+    color:var(--green);
+    border-radius:15px;
+    display:grid;
+    place-items:center;
+    font-size:27px;
+}
+
+header h1 {
+    font-size:21px;
+    letter-spacing:.5px;
+}
+
+header p {
+    font-size:12px;
+    opacity:.9;
+    margin-top:5px;
+}
+
+.header-tag {
+    margin-top:20px;
+    background:#ffffff20;
+    padding:12px;
+    border-radius:12px;
+    font-size:13px;
+}
+
+.container {
+    max-width:900px;
+    margin:auto;
+    padding:16px;
+}
+
+.section-title {
+    font-size:19px;
+    margin:18px 0 13px;
+}
+
+.stats {
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:12px;
+}
+
+.card {
+    background:white;
+    padding:17px;
+    border-radius:17px;
+    box-shadow:var(--shadow);
+}
+
+.stat-icon {
+    font-size:25px;
+}
+
+.stat-number {
+    font-size:25px;
+    font-weight:bold;
+    color:var(--green);
+    margin-top:10px;
+}
+
+.stat-label {
+    color:var(--muted);
+    font-size:12px;
+    margin-top:5px;
+}
+
+nav {
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:9px;
+    margin:20px 0;
+}
+
+nav button {
+    border:0;
+    padding:12px 5px;
+    background:white;
+    color:var(--dark);
+    border-radius:12px;
+    font-weight:bold;
+    box-shadow:var(--shadow);
+    font-size:12px;
+}
+
+nav button.active {
+    background:var(--green);
+    color:white;
+}
+
+.panel {
+    display:none;
+}
+
+.panel.active {
+    display:block;
+}
+
+input,select,textarea {
+    width:100%;
+    padding:13px;
+    border:1px solid #dce8df;
+    border-radius:11px;
+    margin:7px 0 13px;
+    background:white;
+    font-size:14px;
+    outline:none;
+}
+
+input:focus,select:focus,textarea:focus {
+    border-color:var(--green);
+}
+
+label {
+    font-size:13px;
+    font-weight:bold;
+}
+
+.btn {
+    border:0;
+    padding:13px 17px;
+    border-radius:11px;
+    background:var(--green);
+    color:white;
+    font-weight:bold;
+    cursor:pointer;
+    width:100%;
+    font-size:14px;
+}
+
+.btn-secondary {
+    background:#e7f4eb;
+    color:var(--dark);
+}
+
+.result {
+    margin-top:12px;
+    padding:14px;
+    background:var(--light);
+    border-radius:12px;
+    font-size:14px;
+}
+
+.cow-item {
+    background:white;
+    padding:14px;
+    border-radius:13px;
+    margin:10px 0;
+    box-shadow:var(--shadow);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+}
+
+.cow-item button {
+    background:var(--green);
+    color:white;
+    border:0;
+    padding:9px 12px;
+    border-radius:9px;
+}
+
+.profile {
+    background:white;
+    padding:18px;
+    border-radius:16px;
+    box-shadow:var(--shadow);
+}
+
+.profile h3 {
+    color:var(--green);
+    margin-bottom:12px;
+}
+
+.profile p {
+    padding:8px 0;
+    border-bottom:1px solid #edf1ed;
+    font-size:14px;
+}
+
+.chat-box {
+    background:white;
+    border-radius:15px;
+    padding:15px;
+    min-height:130px;
+    margin:12px 0;
+    box-shadow:var(--shadow);
+}
+
+.chat-message {
+    background:var(--light);
+    padding:12px;
+    border-radius:12px;
+    margin:8px 0;
+    font-size:14px;
+    line-height:1.5;
+}
+
+.small-note {
+    color:var(--muted);
+    font-size:12px;
+    line-height:1.5;
+    margin-top:10px;
+}
+
+footer {
+    text-align:center;
+    padding:25px 10px;
+    color:var(--muted);
+    font-size:12px;
+}
+
+.badge {
+    background:#e5f5e9;
+    color:var(--green);
+    padding:5px 9px;
+    border-radius:20px;
+    font-size:11px;
+}
+
+@media(min-width:650px) {
+    .stats {
+        grid-template-columns:repeat(4,1fr);
+    }
+
+    nav {
+        grid-template-columns:repeat(6,1fr);
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <div class="top">
+        <div class="logo">🐄</div>
+        <div>
+            <h1>MUZZLE-ID AI</h1>
+            <p>Smart Cattle Identification & Dairy Management</p>
+        </div>
+    </div>
+
+    <div class="header-tag">
+        One Scan, One Identity, Complete Cattle Information.
+        <br><br>
+        <b>Transforming Dairying with AI and IT</b>
+    </div>
+</header>
+
+<main class="container">
+
+    <h2 class="section-title">📊 Farm Dashboard</h2>
+
+    <div class="stats">
+        <div class="card">
+            <div class="stat-icon">🐄</div>
+            <div class="stat-number" id="totalCows">0</div>
+            <div class="stat-label">Registered Cows</div>
+        </div>
+
+        <div class="card">
+            <div class="stat-icon">🥛</div>
+            <div class="stat-number" id="todayMilk">0</div>
+            <div class="stat-label">Today's Milk (Litres)</div>
+        </div>
+
+        <div class="card">
+            <div class="stat-icon">❤️</div>
+            <div class="stat-number" id="sensorCount">0</div>
+            <div class="stat-label">Sensor Readings</div>
+        </div>
+
+        <div class="card">
+            <div class="stat-icon">📋</div>
+            <div class="stat-number" id="recordCount">0</div>
+            <div class="stat-label">Medical Records</div>
+        </div>
+    </div>
+
+    <nav>
+        <button class="active" onclick="showPanel('dashboard',this)">🏠 Home</button>
+        <button onclick="showPanel('search',this)">🔎 Search</button>
+        <button onclick="showPanel('register',this)">🐄 Register</button>
+        <button onclick="showPanel('health',this)">❤️ Health</button>
+        <button onclick="showPanel('milk',this)">🥛 Milk</button>
+        <button onclick="showPanel('assistant',this)">🤖 AI Help</button>
+    </nav>
+
+    <!-- DASHBOARD -->
+
+    <section id="dashboard" class="panel active">
+
+        <h2 class="section-title">Welcome to MUZZLE-ID AI</h2>
+
+        <div class="card">
+            <h3>🐄 Smart Dairy Management</h3>
+            <p class="small-note">
+                Manage cattle profiles, health information,
+                milk production and medical records from
+                one digital platform.
+            </p>
+            <br>
+            <span class="badge">System Connected</span>
+        </div>
+
+        <h2 class="section-title">📋 All Registered Cows</h2>
+
+        <div id="cowList">
+            <p class="small-note">Loading cow records...</p>
+        </div>
+
+        <button class="btn btn-secondary" onclick="loadDashboard()">
+            🔄 Refresh Dashboard
+        </button>
+    </section>
+
+    <!-- SEARCH -->
+
+    <section id="search" class="panel">
+
+        <h2 class="section-title">🔎 Search Your Cow</h2>
+
+        <div class="card">
+            <label>Enter Cow ID or Name</label>
+            <input id="searchInput" placeholder="Example: 1 or Rani">
+
+            <button class="btn" onclick="searchCow()">
+                Search Cow
+            </button>
+        </div>
+
+        <div id="searchResult"></div>
+        <div id="profileResult"></div>
+    </section>
+
+    <!-- REGISTER -->
+
+    <section id="register" class="panel">
+
+        <h2 class="section-title">🐄 Register New Cow</h2>
+
+        <div class="card">
+
+            <label>Cow Name *</label>
+            <input id="cowName" placeholder="Enter cow name">
+
+            <label>Breed</label>
+            <select id="cowBreed">
+                <option value="">Select Breed</option>
+                <option>Gir</option>
+                <option>Sahiwal</option>
+                <option>Red Sindhi</option>
+                <option>Tharparkar</option>
+                <option>Jersey</option>
+                <option>Holstein Friesian</option>
+                <option>Hariana</option>
+                <option>Murrah Buffalo</option>
+                <option>Other / Unknown</option>
+            </select>
+
+            <label>Age (Years)</label>
+            <input id="cowAge" type="number" min="0" placeholder="Enter age">
+
+            <label>Weight (Kg)</label>
+            <input id="cowWeight" type="number" min="0" step="0.1" placeholder="Enter weight">
+
+            <label>Gender</label>
+            <select id="cowGender">
+                <option value="">Select Gender</option>
+                <option>Female</option>
+                <option>Male</option>
+            </select>
+
+            <button class="btn" onclick="registerCow()">
+                + Register Cow
+            </button>
+
+            <div id="registerResult"></div>
+
+            <p class="small-note">
+                Cow ID सिस्टम द्वारा अपने आप बनाया जाएगा।
+                Breed की जानकारी मालिक द्वारा दर्ज की जाती है।
+            </p>
+        </div>
+    </section>
+
+    <!-- HEALTH -->
+
+    <section id="health" class="panel">
+
+        <h2 class="section-title">❤️ Cow Health Monitoring</h2>
+
+        <div class="card">
+            <label>Cow ID</label>
+            <input id="healthCowId" type="number" placeholder="Enter Cow ID">
+
+            <button class="btn" onclick="loadHealth()">
+                Check Health Records
+            </button>
+
+            <div id="healthResult"></div>
+        </div>
+
+        <p class="small-note">
+            Sensor readings उपलब्ध होने पर यहाँ दिखाई देंगी।
+            DHT22 का तापमान वातावरण का तापमान है, गाय के
+            शरीर का तापमान नहीं। Sensor data स्वास्थ्य का
+            संकेत है, बीमारी का पक्का निदान नहीं।
+        </p>
+    </section>
+
+    <!-- MILK -->
+
+    <section id="milk" class="panel">
+
+        <h2 class="section-title">🥛 Milk Production Records</h2>
+
+        <div class="card">
+
+            <label>Cow ID</label>
+            <input id="milkCowId" type="number" placeholder="Enter Cow ID">
+
+            <label>Milk Quantity (Litres)</label>
+            <input id="milkQuantity" type="number" min="0" step="0.1" placeholder="Example: 5.5">
+
+            <label>Session</label>
+            <select id="milkSession">
+                <option value="morning">Morning</option>
+                <option value="evening">Evening</option>
+            </select>
+
+            <label>Date</label>
+            <input id="milkDate" type="date">
+
+            <label>Notes (Optional)</label>
+            <textarea id="milkNotes" placeholder="Enter notes"></textarea>
+
+            <button class="btn" onclick="saveMilk()">
+                Save Milk Record
+            </button>
+
+            <div id="milkResult"></div>
+        </div>
+
+        <h2 class="section-title">📋 Milk History</h2>
+
+        <div class="card">
+            <label>Filter by Cow ID (Optional)</label>
+            <input id="milkFilterId" type="number" placeholder="Enter Cow ID">
+
+            <button class="btn btn-secondary" onclick="loadMilkHistory()">
+                View Milk History
+            </button>
+
+            <div id="milkHistory"></div>
+        </div>
+    </section>
+
+    <!-- AI ASSISTANT -->
+
+    <section id="assistant" class="panel">
+
+        <h2 class="section-title">🤖 Dairy AI Assistant</h2>
+
+        <div class="card">
+            <p class="small-note">
+                गाय के स्वास्थ्य, चारे और दूध उत्पादन से
+                जुड़े सवाल हिंदी या अंग्रेजी में पूछें।
+            </p>
+
+            <div class="chat-box" id="chatBox">
+                <div class="chat-message">
+                    नमस्ते! मैं MUZZLE-ID AI Demo Assistant हूँ।
+                    आप मुझसे डेयरी मैनेजमेंट के बारे में पूछ सकते हैं।
+                </div>
+            </div>
+
+            <label>Your Question</label>
+            <textarea id="question" placeholder="अपना सवाल यहाँ लिखें..."></textarea>
+
+            <button class="btn" onclick="askAssistant()">
+                Ask Assistant
+            </button>
+        </div>
+
+        <p class="small-note">
+            यह अभी नियम-आधारित Demo Assistant है,
+            इंटरनेट से जानकारी खोजने वाला वास्तविक AI नहीं।
+            स्वास्थ्य संबंधी समस्या में पशु चिकित्सक से सलाह लें।
+        </p>
+    </section>
+
+    <!-- MEDICAL RECORD -->
+
+    <section class="card" style="margin-top:22px;">
+
+        <h2 class="section-title">💉 Add Medical Record</h2>
+
+        <label>Cow ID</label>
+        <input id="recordCowId" type="number" placeholder="Enter Cow ID">
+
+        <label>Record Type</label>
+        <select id="recordType">
+            <option>Vaccination</option>
+            <option>Medical Checkup</option>
+            <option>Medicine</option>
+            <option>Pregnancy</option>
+            <option>Other</option>
+        </select>
+
+        <label>Description</label>
+        <textarea id="recordDescription" placeholder="Enter details"></textarea>
+
+        <button class="btn" onclick="saveRecord()">
+            Save Medical Record
+        </button>
+
+        <div id="recordResult"></div>
+    </section>
+
+</main>
+
+<footer>
+    <b>MUZZLE-ID AI</b>
+    <br>
+    Smart Cattle Identification & Dairy Management System
+    <br><br>
+    National Milk Day Celebration 2026
+    <br>
+    United University, Prayagraj
+    <br><br>
+    Developed by Team MUZZLE-ID AI
+</footer>
+
+<script>
+
+const API = "";
+
+function showPanel(id,button) {
+    document.querySelectorAll(".panel").forEach(p => {
+        p.classList.remove("active");
+    });
+
+    document.getElementById(id).classList.add("active");
+
+    document.querySelectorAll("nav button").forEach(b => {
+        b.classList.remove("active");
+    });
+
+    button.classList.add("active");
+
+    if(id === "dashboard") loadDashboard();
+}
+
+async function api(url,options={}) {
+    const response = await fetch(API + url,{
+        ...options,
+        headers:{
+            "Content-Type":"application/json",
+            ...(options.headers || {})
+        }
+    });
+
+    const data = await response.json();
+
+    if(!response.ok) {
+        throw new Error(data.error || "Something went wrong");
+    }
+
+    return data;
+}
+
+function message(id,text) {
+    document.getElementById(id).innerHTML =
+        `<div class="result">${escapeHTML(text)}</div>`;
+}
+
+function escapeHTML(value) {
+    return String(value ?? "").replace(/[&<>"']/g, char => ({
+        "&":"&amp;",
+        "<":"&lt;",
+        ">":"&gt;",
+        '"':"&quot;",
+        "'":"&#39;"
+    })[char]);
+}
+
+// DASHBOARD
+
+async function loadDashboard() {
+    try {
+        const data = await api("/api/dashboard");
+
+        document.getElementById("totalCows").textContent =
+            data.total_cows;
+
+        document.getElementById("todayMilk").textContent =
+            Number(data.today_milk_liters).toFixed(1);
+
+        document.getElementById("sensorCount").textContent =
+            data.total_sensor_readings;
+
+        document.getElementById("recordCount").textContent =
+            data.total_medical_records;
+
+        const cows = await api("/api/cows");
+
+        const list = document.getElementById("cowList");
+
+        if(cows.length === 0) {
+            list.innerHTML =
+                '<div class="card">अभी कोई गाय रजिस्टर नहीं है। Register सेक्शन से पहली गाय जोड़ें।</div>';
+            return;
+        }
+
+        list.innerHTML = cows.map(cow => `
+            <div class="cow-item">
+                <div>
+                    <b>🐄 ${escapeHTML(cow.name)}</b>
+                    <p class="small-note">
+                        ID: ${cow.id} | ${escapeHTML(cow.breed || "Breed not added")}
+                    </p>
+                </div>
+                <button onclick="openCow(${cow.id})">View</button>
+            </div>
+        `).join("");
+
+    } catch(error) {
+        console.error(error);
+        document.getElementById("cowList").textContent =
+            "Dashboard load नहीं हुआ। Backend चालू है या नहीं, जाँचें।";
+    }
+}
+
+// REGISTER COW
+
+async function registerCow() {
+    const name = document.getElementById("cowName").value.trim();
+
+    if(!name) {
+        message("registerResult","कृपया गाय का नाम लिखें।");
+        return;
+    }
+
+    const data = {
+        name:name,
+        breed:document.getElementById("cowBreed").value,
+        age:document.getElementById("cowAge").value || null,
+        weight:document.getElementById("cowWeight").value || null,
+        gender:document.getElementById("cowGender").value
+    };
+
+    try {
+        const result = await api("/api/cows",{
+            method:"POST",
+            body:JSON.stringify(data)
+        });
+
+        message(
+            "registerResult",
+            "गाय सफलतापूर्वक रजिस्टर हुई! Cow ID: " + result.cow.id
+        );
+
+        document.getElementById("cowName").value = "";
+        document.getElementById("cowAge").value = "";
+        document.getElementById("cowWeight").value = "";
+
+        loadDashboard();
+
+    } catch(error) {
+        message("registerResult",error.message);
+    }
+}
+
+// SEARCH COW
+
+async function searchCow() {
+    const value = document.getElementById("searchInput").value.trim();
+
+    const resultBox = document.getElementById("searchResult");
+    const profileBox = document.getElementById("profileResult");
+
+    resultBox.innerHTML = "";
+    profileBox.innerHTML = "";
+
+    if(!value) {
+        message("searchResult","Cow ID या नाम लिखें।");
+        return;
+    }
+
+    try {
+        const cows = await api("/api/cows");
+
+        const cow = cows.find(item =>
+            String(item.id) === value ||
+            item.name.toLowerCase() === value.toLowerCase()
+        );
+
+        if(!cow) {
+            message("searchResult","इस नाम या ID की गाय नहीं मिली।");
+            return;
+        }
+
+        await openCow(cow.id);
+
+    } catch(error) {
+        message("searchResult",error.message);
+    }
+}
+
+// COW PROFILE
+
+async function openCow(id) {
+    try {
+        const data = await api("/api/cows/" + id);
+        const cow = data.cow;
+
+        document.getElementById("profileResult").innerHTML = `
+            <div class="profile">
+                <h3>🐄 Cow Profile</h3>
+                <p><b>Cow ID:</b> ${cow.id}</p>
+                <p><b>Name:</b> ${escapeHTML(cow.name)}</p>
+                <p><b>Breed:</b> ${escapeHTML(cow.breed || "Not added")}</p>
+                <p><b>Age:</b> ${cow.age ?? "Not added"}</p>
+                <p><b>Weight:</b> ${cow.weight ?? "Not added"} kg</p>
+                <p><b>Gender:</b> ${escapeHTML(cow.gender || "Not added")}</p>
+                <p><b>Medical Records:</b> ${data.records.length}</p>
+                <p><b>Sensor Readings:</b> ${data.sensors.length}</p>
+                <br>
+                <button class="btn btn-secondary"
+                    onclick="document.getElementById('healthCowId').value=${cow.id};showPanel('health',document.querySelectorAll('nav button')[3]);loadHealth();">
+                    View Health
+                </button>
+            </div>
+        `;
+
+    } catch(error) {
+        message("profileResult",error.message);
+    }
+}
+
+// HEALTH
+
+async function loadHealth() {
+    const id = document.getElementById("healthCowId").value;
+
+    if(!id) {
+        message("healthResult","Cow ID लिखें।");
+        return;
+    }
+
+    try {
+        const data = await api("/api/health/" + id);
+
+        let html = `
+            <div class="result">
+            <b>🐄 ${escapeHTML(data.cow_name)}</b><br>
+            Cow ID: ${data.cow_id}<br><br>
+        `;
+
+        if(data.latest_health_data) {
+            const s = data.latest_health_data;
+
+            html += `
+                Temperature: ${s.temperature ?? "N/A"}<br>
+                Humidity: ${s.humidity ?? "N/A"}<br>
+                Activity: ${s.activity ?? "N/A"}<br>
+                Heart Rate: ${s.heart_rate ?? "N/A"}<br>
+                Recorded: ${escapeHTML(s.recorded_at)}
+            `;
+        } else {
+            html += "अभी कोई Sensor Data उपलब्ध नहीं है।";
+        }
+
+        html += "</div>";
+
+        document.getElementById("healthResult").innerHTML = html;
+
+    } catch(error) {
+        message("healthResult",error.message);
+    }
+}
+
+// MILK RECORD
+
+async function saveMilk() {
+    const cowId = document.getElementById("milkCowId").value;
+    const quantity = document.getElementById("milkQuantity").value;
+
+    if(!cowId || quantity === "") {
+        message("milkResult","Cow ID और Milk Quantity जरूरी हैं।");
+        return;
+    }
+
+    const data = {
+        cow_id:cowId,
+        quantity:quantity,
+        session:document.getElementById("milkSession").value,
+        date:document.getElementById("milkDate").value || null,
+        notes:document.getElementById("milkNotes").value
+    };
+
+    try {
+        await api("/api/milk",{
+            method:"POST",
+            body:JSON.stringify(data)
+        });
+
+        message("milkResult","Milk Record सफलतापूर्वक सेव हो गया।");
+
+        document.getElementById("milkQuantity").value = "";
+
+        loadDashboard();
+
+    } catch(error) {
+        message("milkResult",error.message);
+    }
+}
+
+// MILK HISTORY
+
+async function loadMilkHistory() {
+    const id = document.getElementById("milkFilterId").value;
+
+    const url = id
+        ? "/api/milk?cow_id=" + encodeURIComponent(id)
+        : "/api/milk";
+
+    try {
+        const records = await api(url);
+
+        const box = document.getElementById("milkHistory");
+
+        if(records.length === 0) {
+            box.innerHTML = "<p class='small-note'>कोई Milk Record नहीं मिला।</p>";
+            return;
+        }
+
+        box.innerHTML = records.map(item => `
+            <div class="result">
+                <b>${escapeHTML(item.cow_name)}</b><br>
+                Cow ID: ${item.cow_id}<br>
+                Milk: ${item.quantity} Litres<br>
+                Session: ${escapeHTML(item.session)}<br>
+                Date: ${escapeHTML(item.date)}
+            </div>
+        `).join("");
+
+    } catch(error) {
+        message("milkHistory",error.message);
+    }
+}
+
+// MEDICAL RECORD
+
+async function saveRecord() {
+    const cowId = document.getElementById("recordCowId").value;
+    const description =
+        document.getElementById("recordDescription").value.trim();
+
+    if(!cowId || !description) {
+        message("recordResult","Cow ID और Description लिखें।");
+        return;
+    }
+
+    const data = {
+        cow_id:cowId,
+        record_type:document.getElementById("recordType").value,
+        description:description
+    };
+
+    try {
+        await api("/api/records",{
+            method:"POST",
+            body:JSON.stringify(data)
+        });
+
+        message("recordResult","Medical Record सेव हो गया।");
+
+        document.getElementById("recordDescription").value = "";
+
+        loadDashboard();
+
+    } catch(error) {
+        message("recordResult",error.message);
+    }
+}
+
+// DEMO ASSISTANT
+
+async function askAssistant() {
+    const question = document.getElementById("question").value.trim();
+
+    if(!question) return;
+
+    const box = document.getElementById("chatBox");
+
+    box.innerHTML += `
+        <div class="chat-message">
+            <b>You:</b> ${escapeHTML(question)}
+        </div>
+    `;
+
+    document.getElementById("question").value = "";
+
+    try {
+        const data = await api("/api/assistant",{
+            method:"POST",
+            body:JSON.stringify({question:question})
+        });
+
+        box.innerHTML += `
+            <div class="chat-message">
+                <b>🤖 MUZZLE-ID AI:</b><br>
+                ${escapeHTML(data.answer)}
+            </div>
+        `;
+
+    } catch(error) {
+        box.innerHTML += `
+            <div class="chat-message">
+                Assistant error: ${escapeHTML(error.message)}
+            </div>
+        `;
+    }
+
+    box.scrollTop = box.scrollHeight;
+}
+
+// INITIAL LOAD
+
+document.getElementById("milkDate").value =
+    new Date().toISOString().slice(0,10);
+
+loadDashboard();
+
+</script>
+
+</body>
+</html>
