@@ -1,693 +1,611 @@
-import os
+
+    
+      import os
 import sqlite3
 from datetime import datetime
-from flask import Flask, request, jsonify, render_template
+from functools import wraps
 
-# ==========================================
-# APP CONFIGURATION
-# ==========================================
+from flask import Flask, request, jsonify, render_template, session
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 
-app.config["JSON_SORT_KEYS"] = False
+app.secret_key = os.environ.get(
+    "SECRET_KEY",
+    "muzzle-id-ai-change-this-before-deployment"
+)
 
-DATABASE = os.environ.get("DATABASE_PATH", "cattle.db")
-DEVICE_TOKEN = os.environ.get("DEVICE_TOKEN")
+DATABASE = os.environ.get("DATABASE_PATH", "muzzle_id.db")
 
 
-# ==========================================
-# DATABASE CONNECTION
-# ==========================================
+# ---------------- DATABASE ----------------
 
-def get_db_connection():
+def get_db():
     conn = sqlite3.connect(DATABASE)
     conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA foreign_keys = ON")
     return conn
 
 
 def init_db():
-    conn = get_db_connection()
+    with get_db() as db:
 
-    conn.executescript("""
-        CREATE TABLE IF NOT EXISTS cows (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            breed TEXT,
-            age INTEGER,
-            weight REAL,
-            gender TEXT,
-            created_at TEXT DEFAULT CURRENT_TIMESTAMP
-        );
+        db.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                email TEXT UNIQUE NOT NULL,
+                password TEXT NOT NULL,
+                created_at TEXT
+            )
+        """)
 
-        CREATE TABLE IF NOT EXISTS sensors (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            cow_id INTEGER NOT NULL,
-            temperature REAL,
-            humidity REAL,
-            activity REAL,
-            heart_rate REAL,
-            recorded_at TEXT DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (cow_id) REFERENCES cows(id)
-                ON DELETE CASCADE
-        );
+        db.execute("""
+            CREATE TABLE IF NOT EXISTS cows (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                owner_id INTEGER,
+                name TEXT,
+                animal_type TEXT,
+                breed TEXT,
+                age TEXT,
+                gender TEXT,
+                weight REAL,
+                country TEXT,
+                photo TEXT,
+                public_profile INTEGER DEFAULT 0,
+                created_at TEXT
+            )
+        """)
 
-        CREATE TABLE IF NOT EXISTS records (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            cow_id INTEGER NOT NULL,
-            record_type TEXT,
-            description TEXT,
-            date TEXT DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (cow_id) REFERENCES cows(id)
-                ON DELETE CASCADE
-        );
+        db.execute("""
+            CREATE TABLE IF NOT EXISTS health_records (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                cow_id INTEGER,
+                description TEXT,
+                record_date TEXT
+            )
+        """)
 
-        CREATE TABLE IF NOT EXISTS milk_records (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            cow_id INTEGER NOT NULL,
-            quantity REAL NOT NULL,
-            session TEXT DEFAULT 'morning',
-            date TEXT DEFAULT CURRENT_DATE,
-            notes TEXT,
-            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (cow_id) REFERENCES cows(id)
-                ON DELETE CASCADE
-        );
+        db.execute("""
+            CREATE TABLE IF NOT EXISTS milk_records (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                cow_id INTEGER,
+                quantity REAL,
+                record_date TEXT
+            )
+        """)
 
-        CREATE INDEX IF NOT EXISTS idx_sensors_cow_id
-        ON sensors(cow_id);
-
-        CREATE INDEX IF NOT EXISTS idx_records_cow_id
-        ON records(cow_id);
-
-        CREATE INDEX IF NOT EXISTS idx_milk_cow_date
-        ON milk_records(cow_id, date);
-    """)
-
-    conn.commit()
-    conn.close()
+        db.execute("""
+            CREATE TABLE IF NOT EXISTS marketplace (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                cow_id INTEGER,
+                owner_id INTEGER,
+                price REAL,
+                location TEXT,
+                status TEXT DEFAULT 'available'
+            )
+        """)
 
 
-# ==========================================
-# HELPER FUNCTIONS
-# ==========================================
+init_db()
 
-def error_response(message, status=400):
+
+# ---------------- HELPERS ----------------
+
+def response(data=None, message="Success", status=200):
     return jsonify({
-        "success": False,
-        "error": message
+        "success": True,
+        "message": message,
+        "data": data
     }), status
 
 
-def cow_exists(conn, cow_id):
-    cow = conn.execute(
-        "SELECT id FROM cows WHERE id = ?",
-        (cow_id,)
-    ).fetchone()
+def login_required(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if "owner_id" not in session:
+            return jsonify({
+                "success": False,
+                "message": "Please login first"
+            }), 401
 
-    return cow is not None
+        return func(*args, **kwargs)
 
-
-def get_json_data():
-    return request.get_json(silent=True) or {}
-
-
-def require_device_token():
-    """
-    If DEVICE_TOKEN is configured, sensor requests
-    must include the matching X-Device-Token header.
-    """
-    if DEVICE_TOKEN:
-        supplied_token = request.headers.get("X-Device-Token")
-
-        if supplied_token != DEVICE_TOKEN:
-            return False
-
-    return True
+    return wrapper
 
 
-# ==========================================
-# HOME PAGE
-# ==========================================
+# ---------------- HOME ----------------
 
 @app.route("/")
 def home():
     return render_template("index.html")
 
 
-# ==========================================
-# COW MANAGEMENT API
-# ==========================================
+@app.route("/health")
+def health():
+    return response({
+        "status": "Online",
+        "project": "MUZZLE-ID AI"
+    })
 
-@app.route("/api/cows", methods=["GET"])
-def get_cows():
-    conn = get_db_connection()
 
-    cows = conn.execute("""
-        SELECT *
-        FROM cows
-        ORDER BY id DESC
-    """).fetchall()
+# ---------------- DASHBOARD ----------------
 
-    conn.close()
+@app.route("/api/dashboard")
+def dashboard():
 
-    return jsonify([dict(cow) for cow in cows])
+    with get_db() as db:
 
+        total = db.execute(
+            "SELECT COUNT(*) FROM cows WHERE public_profile=1"
+        ).fetchone()[0]
+
+        cows = db.execute(
+            "SELECT COUNT(*) FROM cows WHERE animal_type='Cow' AND public_profile=1"
+        ).fetchone()[0]
+
+        buffalo = db.execute(
+            "SELECT COUNT(*) FROM cows WHERE animal_type='Buffalo' AND public_profile=1"
+        ).fetchone()[0]
+
+        owners = db.execute(
+            "SELECT COUNT(DISTINCT owner_id) FROM cows WHERE public_profile=1"
+        ).fetchone()[0]
+
+        breeds = db.execute(
+            "SELECT COUNT(DISTINCT breed) FROM cows WHERE public_profile=1"
+        ).fetchone()[0]
+
+        listings = db.execute(
+            "SELECT COUNT(*) FROM marketplace WHERE status='available'"
+        ).fetchone()[0]
+
+    return response({
+        "total_cattle": total,
+        "total_cows": cows,
+        "total_buffalo": buffalo,
+        "total_owners": owners,
+        "total_breeds": breeds,
+        "marketplace_listings": listings
+    })
+
+
+# ---------------- REGISTER ----------------
+
+@app.route("/api/register", methods=["POST"])
+def register():
+
+    data = request.get_json(silent=True) or {}
+
+    name = data.get("name", "").strip()
+    email = data.get("email", "").strip().lower()
+    password = data.get("password", "")
+
+    if not name or not email or len(password) < 8:
+        return jsonify({
+            "success": False,
+            "message": "Name, valid email and password of at least 8 characters required"
+        }), 400
+
+    try:
+
+        with get_db() as db:
+
+            cursor = db.execute("""
+                INSERT INTO users(name,email,password,created_at)
+                VALUES(?,?,?,?)
+            """, (
+                name,
+                email,
+                generate_password_hash(password),
+                datetime.now().isoformat()
+            ))
+
+            user_id = cursor.lastrowid
+
+        session.clear()
+        session["owner_id"] = user_id
+        session["owner_name"] = name
+
+        return response({
+            "owner_id": user_id,
+            "name": name
+        }, "Account created", 201)
+
+    except sqlite3.IntegrityError:
+
+        return jsonify({
+            "success": False,
+            "message": "Email already registered"
+        }), 409
+
+
+# ---------------- LOGIN ----------------
+
+@app.route("/api/login", methods=["POST"])
+def login():
+
+    data = request.get_json(silent=True) or {}
+
+    email = data.get("email", "").strip().lower()
+    password = data.get("password", "")
+
+    with get_db() as db:
+
+        user = db.execute(
+            "SELECT * FROM users WHERE email=?",
+            (email,)
+        ).fetchone()
+
+    if not user or not check_password_hash(user["password"], password):
+
+        return jsonify({
+            "success": False,
+            "message": "Incorrect email or password"
+        }), 401
+
+    session.clear()
+    session["owner_id"] = user["id"]
+    session["owner_name"] = user["name"]
+
+    return response({
+        "owner_id": user["id"],
+        "name": user["name"]
+    }, "Login successful")
+
+
+# ---------------- LOGOUT ----------------
+
+@app.route("/api/logout", methods=["POST"])
+def logout():
+
+    session.clear()
+
+    return response(message="Logged out")
+
+
+# ---------------- CATTLE REGISTRATION ----------------
 
 @app.route("/api/cows", methods=["POST"])
+@login_required
 def add_cow():
-    data = get_json_data()
 
-    name = data.get("name")
+    data = request.get_json(silent=True) or {}
 
-    if not name or not str(name).strip():
-        return error_response("Cow name is required")
+    breed = data.get("breed", "").strip()
 
-    try:
-        age = data.get("age")
-        weight = data.get("weight")
+    if not breed:
+        return jsonify({
+            "success": False,
+            "message": "Breed is required"
+        }), 400
 
-        if age is not None:
-            age = int(age)
-            if age < 0:
-                return error_response("Age cannot be negative")
+    animal_type = data.get("animal_type", "Cow")
 
-        if weight is not None:
-            weight = float(weight)
-            if weight < 0:
-                return error_response("Weight cannot be negative")
+    if animal_type not in ["Cow", "Buffalo", "Other"]:
+        return jsonify({
+            "success": False,
+            "message": "Invalid animal type"
+        }), 400
 
-    except (ValueError, TypeError):
-        return error_response("Age or weight has an invalid value")
+    with get_db() as db:
 
-    conn = get_db_connection()
+        cursor = db.execute("""
+            INSERT INTO cows(
+                owner_id,name,animal_type,breed,age,
+                gender,weight,country,public_profile,created_at
+            )
+            VALUES(?,?,?,?,?,?,?,?,?,?)
+        """, (
+            session["owner_id"],
+            data.get("name"),
+            animal_type,
+            breed,
+            data.get("age"),
+            data.get("gender"),
+            data.get("weight"),
+            data.get("country"),
+            1 if data.get("public_profile") else 0,
+            datetime.now().isoformat()
+        ))
 
-    cursor = conn.execute("""
-        INSERT INTO cows (name, breed, age, weight, gender)
-        VALUES (?, ?, ?, ?, ?)
-    """, (
-        str(name).strip(),
-        data.get("breed"),
-        age,
-        weight,
-        data.get("gender")
-    ))
+        cow_id = cursor.lastrowid
 
-    conn.commit()
-
-    cow_id = cursor.lastrowid
-
-    cow = conn.execute(
-        "SELECT * FROM cows WHERE id = ?",
-        (cow_id,)
-    ).fetchone()
-
-    conn.close()
-
-    return jsonify({
-        "success": True,
-        "message": "Cow added successfully",
-        "cow": dict(cow)
-    }), 201
+    return response({
+        "cow_id": cow_id,
+        "breed": breed,
+        "animal_type": animal_type
+    }, "Animal registered", 201)
 
 
-@app.route("/api/cows/<int:cow_id>", methods=["GET"])
-def get_cow(cow_id):
-    conn = get_db_connection()
+# ---------------- CATTLE LIST ----------------
 
-    cow = conn.execute(
-        "SELECT * FROM cows WHERE id = ?",
-        (cow_id,)
-    ).fetchone()
+@app.route("/api/cows")
+def get_cows():
+
+    owner_id = session.get("owner_id")
+
+    with get_db() as db:
+
+        if owner_id:
+
+            rows = db.execute(
+                "SELECT * FROM cows WHERE owner_id=?",
+                (owner_id,)
+            ).fetchall()
+
+        else:
+
+            rows = db.execute(
+                "SELECT id,name,animal_type,breed,age,gender,country "
+                "FROM cows WHERE public_profile=1"
+            ).fetchall()
+
+    return response([dict(row) for row in rows])
+
+
+# ---------------- SINGLE CATTLE PROFILE ----------------
+
+@app.route("/api/cows/<int:cow_id>")
+def cow_profile(cow_id):
+
+    with get_db() as db:
+
+        cow = db.execute(
+            "SELECT * FROM cows WHERE id=?",
+            (cow_id,)
+        ).fetchone()
 
     if not cow:
-        conn.close()
-        return error_response("Cow not found", 404)
+        return jsonify({"success": False, "message": "Animal not found"}), 404
 
-    sensors = conn.execute("""
-        SELECT *
-        FROM sensors
-        WHERE cow_id = ?
-        ORDER BY id DESC
-        LIMIT 20
-    """, (cow_id,)).fetchall()
+    if cow["owner_id"] != session.get("owner_id") and not cow["public_profile"]:
+        return jsonify({"success": False, "message": "Private profile"}), 403
 
-    records = conn.execute("""
-        SELECT *
-        FROM records
-        WHERE cow_id = ?
-        ORDER BY id DESC
-    """, (cow_id,)).fetchall()
-
-    conn.close()
-
-    return jsonify({
-        "cow": dict(cow),
-        "sensors": [dict(item) for item in sensors],
-        "records": [dict(item) for item in records]
-    })
+    return response(dict(cow))
 
 
-# ==========================================
-# MEDICAL AND VACCINATION RECORDS API
-# ==========================================
+# ---------------- HEALTH RECORDS ----------------
+
+@app.route("/api/health/<int:cow_id>")
+@login_required
+def health_records(cow_id):
+
+    with get_db() as db:
+
+        cow = db.execute(
+            "SELECT id FROM cows WHERE id=? AND owner_id=?",
+            (cow_id, session["owner_id"])
+        ).fetchone()
+
+        if not cow:
+            return jsonify({"success": False, "message": "Animal not found"}), 404
+
+        rows = db.execute(
+            "SELECT * FROM health_records WHERE cow_id=?",
+            (cow_id,)
+        ).fetchall()
+
+    return response([dict(row) for row in rows])
+
 
 @app.route("/api/records", methods=["POST"])
-def add_record():
-    data = get_json_data()
+@login_required
+def add_health_record():
 
-    cow_id = data.get("cow_id")
-    record_type = data.get("record_type")
-    description = data.get("description")
+    data = request.get_json(silent=True) or {}
 
-    if not cow_id:
-        return error_response("cow_id is required")
+    with get_db() as db:
 
-    try:
-        cow_id = int(cow_id)
-    except (ValueError, TypeError):
-        return error_response("Invalid cow_id")
+        cow = db.execute(
+            "SELECT id FROM cows WHERE id=? AND owner_id=?",
+            (data.get("cow_id"), session["owner_id"])
+        ).fetchone()
 
-    conn = get_db_connection()
+        if not cow:
+            return jsonify({"success": False, "message": "Animal not found"}), 404
 
-    if not cow_exists(conn, cow_id):
-        conn.close()
-        return error_response("Cow not found", 404)
+        cursor = db.execute("""
+            INSERT INTO health_records(cow_id,description,record_date)
+            VALUES(?,?,?)
+        """, (
+            data.get("cow_id"),
+            data.get("description"),
+            data.get("date", datetime.now().date().isoformat())
+        ))
 
-    cursor = conn.execute("""
-        INSERT INTO records (
-            cow_id,
-            record_type,
-            description,
-            date
-        )
-        VALUES (?, ?, ?, ?)
-    """, (
-        cow_id,
-        record_type,
-        description,
-        data.get("date") or datetime.now().isoformat()
-    ))
-
-    conn.commit()
-
-    record = conn.execute(
-        "SELECT * FROM records WHERE id = ?",
-        (cursor.lastrowid,)
-    ).fetchone()
-
-    conn.close()
-
-    return jsonify({
-        "success": True,
-        "message": "Record added successfully",
-        "record": dict(record)
-    }), 201
+    return response({"record_id": cursor.lastrowid}, "Health record saved", 201)
 
 
-# ==========================================
-# IOT SENSOR API
-# ==========================================
-
-@app.route("/api/sensors", methods=["POST"])
-def add_sensor():
-    if not require_device_token():
-        return error_response("Unauthorized device", 401)
-
-    data = get_json_data()
-
-    cow_id = data.get("cow_id")
-
-    if not cow_id:
-        return error_response("cow_id is required")
-
-    try:
-        cow_id = int(cow_id)
-
-        temperature = data.get("temperature")
-        humidity = data.get("humidity")
-        activity = data.get("activity")
-        heart_rate = data.get("heart_rate")
-
-        if temperature is not None:
-            temperature = float(temperature)
-
-        if humidity is not None:
-            humidity = float(humidity)
-
-        if activity is not None:
-            activity = float(activity)
-
-        if heart_rate is not None:
-            heart_rate = float(heart_rate)
-
-    except (ValueError, TypeError):
-        return error_response("Invalid sensor data")
-
-    conn = get_db_connection()
-
-    if not cow_exists(conn, cow_id):
-        conn.close()
-        return error_response("Cow not found", 404)
-
-    cursor = conn.execute("""
-        INSERT INTO sensors (
-            cow_id,
-            temperature,
-            humidity,
-            activity,
-            heart_rate
-        )
-        VALUES (?, ?, ?, ?, ?)
-    """, (
-        cow_id,
-        temperature,
-        humidity,
-        activity,
-        heart_rate
-    ))
-
-    conn.commit()
-
-    sensor = conn.execute(
-        "SELECT * FROM sensors WHERE id = ?",
-        (cursor.lastrowid,)
-    ).fetchone()
-
-    conn.close()
-
-    return jsonify({
-        "success": True,
-        "message": "Sensor data saved successfully",
-        "sensor": dict(sensor)
-    }), 201
-
-
-# ==========================================
-# COW HEALTH API
-# ==========================================
-
-@app.route("/api/health/<int:cow_id>", methods=["GET"])
-def get_health(cow_id):
-    conn = get_db_connection()
-
-    cow = conn.execute(
-        "SELECT * FROM cows WHERE id = ?",
-        (cow_id,)
-    ).fetchone()
-
-    if not cow:
-        conn.close()
-        return error_response("Cow not found", 404)
-
-    sensor = conn.execute("""
-        SELECT *
-        FROM sensors
-        WHERE cow_id = ?
-        ORDER BY id DESC
-        LIMIT 1
-    """, (cow_id,)).fetchone()
-
-    history = conn.execute("""
-        SELECT *
-        FROM sensors
-        WHERE cow_id = ?
-        ORDER BY id DESC
-        LIMIT 10
-    """, (cow_id,)).fetchall()
-
-    conn.close()
-
-    return jsonify({
-        "cow_id": cow_id,
-        "cow_name": cow["name"],
-        "latest_health_data": dict(sensor) if sensor else None,
-        "health_history": [dict(item) for item in history]
-    })
-
-
-# ==========================================
-# MILK PRODUCTION API
-# ==========================================
+# ---------------- MILK RECORDS ----------------
 
 @app.route("/api/milk", methods=["POST"])
+@login_required
 def add_milk_record():
-    data = get_json_data()
 
-    cow_id = data.get("cow_id")
-    quantity = data.get("quantity")
-
-    if cow_id is None or quantity is None:
-        return error_response("cow_id and quantity are required")
+    data = request.get_json(silent=True) or {}
 
     try:
-        cow_id = int(cow_id)
-        quantity = float(quantity)
+        quantity = float(data.get("quantity"))
+        cow_id = int(data.get("cow_id"))
 
         if quantity < 0:
-            return error_response("Milk quantity cannot be negative")
+            raise ValueError()
 
-    except (ValueError, TypeError):
-        return error_response("Invalid cow_id or quantity")
+    except (TypeError, ValueError):
+        return jsonify({"success": False, "message": "Invalid milk quantity or animal ID"}), 400
 
-    session = data.get("session", "morning").lower()
+    with get_db() as db:
 
-    if session not in ["morning", "evening"]:
-        return error_response("Session must be morning or evening")
+        cow = db.execute(
+            "SELECT id FROM cows WHERE id=? AND owner_id=?",
+            (cow_id, session["owner_id"])
+        ).fetchone()
 
-    milk_date = data.get("date") or datetime.now().strftime("%Y-%m-%d")
+        if not cow:
+            return jsonify({"success": False, "message": "Animal not found"}), 404
 
-    conn = get_db_connection()
-
-    if not cow_exists(conn, cow_id):
-        conn.close()
-        return error_response("Cow not found", 404)
-
-    cursor = conn.execute("""
-        INSERT INTO milk_records (
+        cursor = db.execute("""
+            INSERT INTO milk_records(cow_id,quantity,record_date)
+            VALUES(?,?,?)
+        """, (
             cow_id,
             quantity,
-            session,
-            date,
-            notes
-        )
-        VALUES (?, ?, ?, ?, ?)
-    """, (
-        cow_id,
-        quantity,
-        session,
-        milk_date,
-        data.get("notes")
-    ))
+            data.get("date", datetime.now().date().isoformat())
+        ))
 
-    conn.commit()
-
-    record = conn.execute(
-        "SELECT * FROM milk_records WHERE id = ?",
-        (cursor.lastrowid,)
-    ).fetchone()
-
-    conn.close()
-
-    return jsonify({
-        "success": True,
-        "message": "Milk record saved successfully",
-        "record": dict(record)
-    }), 201
+    return response({"record_id": cursor.lastrowid}, "Milk record saved", 201)
 
 
-@app.route("/api/milk", methods=["GET"])
+@app.route("/api/milk")
+@login_required
 def get_milk_records():
-    cow_id = request.args.get("cow_id")
-    milk_date = request.args.get("date")
 
-    conn = get_db_connection()
+    with get_db() as db:
 
-    query = """
-        SELECT milk_records.*, cows.name AS cow_name
-        FROM milk_records
-        JOIN cows ON cows.id = milk_records.cow_id
-        WHERE 1 = 1
-    """
+        rows = db.execute("""
+            SELECT m.* FROM milk_records m
+            JOIN cows c ON c.id=m.cow_id
+            WHERE c.owner_id=?
+            ORDER BY m.id DESC
+        """, (session["owner_id"],)).fetchall()
 
-    params = []
-
-    if cow_id:
-        try:
-            cow_id = int(cow_id)
-        except ValueError:
-            conn.close()
-            return error_response("Invalid cow_id")
-
-        query += " AND milk_records.cow_id = ?"
-        params.append(cow_id)
-
-    if milk_date:
-        query += " AND milk_records.date = ?"
-        params.append(milk_date)
-
-    query += " ORDER BY milk_records.date DESC, milk_records.id DESC"
-
-    records = conn.execute(query, params).fetchall()
-
-    conn.close()
-
-    return jsonify([dict(item) for item in records])
+    return response([dict(row) for row in rows])
 
 
-# ==========================================
-# DASHBOARD STATISTICS API
-# ==========================================
+# ---------------- MARKETPLACE ----------------
 
-@app.route("/api/dashboard", methods=["GET"])
-def dashboard():
-    conn = get_db_connection()
+@app.route("/api/marketplace")
+def marketplace():
 
-    total_cows = conn.execute("""
-        SELECT COUNT(*) AS total FROM cows
-    """).fetchone()["total"]
+    with get_db() as db:
 
-    total_records = conn.execute("""
-        SELECT COUNT(*) AS total FROM records
-    """).fetchone()["total"]
+        rows = db.execute("""
+            SELECT m.id,m.price,m.location,m.status,
+                   c.id AS cow_id,c.name,c.breed,c.animal_type,c.age
+            FROM marketplace m
+            JOIN cows c ON c.id=m.cow_id
+            WHERE m.status='available' AND c.public_profile=1
+            ORDER BY m.id DESC
+        """).fetchall()
 
-    total_sensors = conn.execute("""
-        SELECT COUNT(*) AS total FROM sensors
-    """).fetchone()["total"]
-
-    today = datetime.now().strftime("%Y-%m-%d")
-
-    today_milk = conn.execute("""
-        SELECT COALESCE(SUM(quantity), 0) AS total
-        FROM milk_records
-        WHERE date = ?
-    """, (today,)).fetchone()["total"]
-
-    total_milk = conn.execute("""
-        SELECT COALESCE(SUM(quantity), 0) AS total
-        FROM milk_records
-    """).fetchone()["total"]
-
-    conn.close()
-
-    return jsonify({
-        "success": True,
-        "total_cows": total_cows,
-        "total_medical_records": total_records,
-        "total_sensor_readings": total_sensors,
-        "today_milk_liters": today_milk,
-        "total_milk_liters": total_milk
-    })
+    return response([dict(row) for row in rows])
 
 
-# ==========================================
-# AI ASSISTANT API
-# ==========================================
+@app.route("/api/marketplace", methods=["POST"])
+@login_required
+def add_listing():
+
+    data = request.get_json(silent=True) or {}
+
+    try:
+        cow_id = int(data.get("cow_id"))
+        price = float(data.get("price", 0))
+
+        if price < 0:
+            raise ValueError()
+
+    except (TypeError, ValueError):
+        return jsonify({"success": False, "message": "Invalid animal ID or price"}), 400
+
+    with get_db() as db:
+
+        cow = db.execute(
+            "SELECT id FROM cows WHERE id=? AND owner_id=?",
+            (cow_id, session["owner_id"])
+        ).fetchone()
+
+        if not cow:
+            return jsonify({"success": False, "message": "Animal not found"}), 404
+
+        cursor = db.execute("""
+            INSERT INTO marketplace(cow_id,owner_id,price,location)
+            VALUES(?,?,?,?)
+        """, (
+            cow_id,
+            session["owner_id"],
+            price,
+            data.get("location")
+        ))
+
+    return response({"listing_id": cursor.lastrowid}, "Listing created", 201)
+
+
+# ---------------- BREED CATALOGUE ----------------
+
+BREEDS = {
+    "Cow": [
+        "Gir", "Sahiwal", "Red Sindhi", "Tharparkar",
+        "Kankrej", "Rathi", "Ongole", "Hariana",
+        "Deoni", "Hallikar", "Vechur", "Punganur",
+        "Holstein Friesian", "Jersey", "Brown Swiss",
+        "Angus", "Hereford", "Simmental", "Limousin"
+    ],
+    "Buffalo": [
+        "Murrah", "Jaffarabadi", "Mehsana", "Surti",
+        "Nili-Ravi", "Bhadawari", "Nagpuri",
+        "Pandharpuri", "Toda", "Mediterranean"
+    ]
+}
+
+
+@app.route("/api/breeds")
+def get_breeds():
+
+    animal_type = request.args.get("animal_type")
+
+    if animal_type:
+        return response(BREEDS.get(animal_type, []))
+
+    return response(BREEDS)
+
+
+# ---------------- AI ASSISTANT ----------------
 
 @app.route("/api/assistant", methods=["POST"])
 def assistant():
-    data = get_json_data()
 
-    question = data.get("question", "").strip()
+    data = request.get_json(silent=True) or {}
+
+    question = data.get("message", "").strip()
 
     if not question:
-        return error_response("Please enter a question")
+        return jsonify({"success": False, "message": "Enter a question"}), 400
 
-    q = question.lower()
+    answer = (
+        "Welcome to MUZZLE-ID AI. This is the demonstration assistant. "
+        "The live AI model is not connected yet. For animal illness or "
+        "medical concerns, consult a qualified veterinarian."
+    )
 
-    if any(word in q for word in [
-        "temperature", "बुखार", "तापमान"
-    ]):
-        answer = (
-            "गाय का तापमान सामान्य से अलग दिखाई दे तो "
-            "दोबारा सही तरीके से मापें और पशु चिकित्सक "
-            "से सलाह लें।"
-        )
-
-    elif any(word in q for word in [
-        "milk", "दूध", "production"
-    ]):
-        answer = (
-            "दूध उत्पादन का रिकॉर्ड रोज सुबह और शाम दर्ज करें। "
-            "इससे आप हर गाय के दूध उत्पादन में बदलाव देख सकते हैं।"
-        )
-
-    elif any(word in q for word in [
-        "food", "feed", "चारा", "खाना"
-    ]):
-        answer = (
-            "गाय को साफ पानी, संतुलित चारा और उचित पोषण दें। "
-            "उसकी उम्र और स्वास्थ्य के अनुसार पशु चिकित्सक "
-            "या पशु पोषण विशेषज्ञ से आहार की सलाह लें।"
-        )
-
-    elif any(word in q for word in [
-        "health", "बीमारी", "स्वास्थ्य"
-    ]):
-        answer = (
-            "गाय के व्यवहार, खान-पान, गतिविधि और सेंसर डेटा "
-            "पर नजर रखें। बीमारी के संकेत दिखने पर पशु "
-            "चिकित्सक से संपर्क करें।"
-        )
-
-    else:
-        answer = (
-            "नमस्ते! मैं आपके डेयरी फार्म मैनेजमेंट में मदद "
-            "करने वाला डेमो असिस्टेंट हूँ। आप गाय के स्वास्थ्य, "
-            "दूध उत्पादन, चारे और रिकॉर्ड के बारे में पूछ सकते हैं।"
-        )
-
-    return jsonify({
-        "success": True,
+    return response({
         "question": question,
-        "answer": answer
+        "answer": answer,
+        "mode": "demo"
     })
 
 
-# ==========================================
-# API HEALTH CHECK
-# ==========================================
+# ---------------- MUZZLE SCAN ----------------
 
-@app.route("/api/status", methods=["GET"])
-def api_status():
+@app.route("/api/scan", methods=["POST"])
+@login_required
+def muzzle_scan():
+
     return jsonify({
         "success": True,
-        "message": "Dairy Management API is running",
-        "timestamp": datetime.now().isoformat()
-    })
+        "status": "model_not_connected",
+        "message": (
+            "Muzzle image upload and individual cattle recognition "
+            "require a trained cattle recognition model. "
+            "No automatic identity has been generated."
+        )
+    }), 202
 
 
-# ==========================================
-# ERROR HANDLERS
-# ==========================================
-
-@app.errorhandler(404)
-def not_found(error):
-    if request.path.startswith("/api/"):
-        return error_response("API endpoint not found", 404)
-
-    return "Page not found", 404
-
-
-@app.errorhandler(500)
-def internal_error(error):
-    if request.path.startswith("/api/"):
-        return error_response("Internal server error", 500)
-
-    return "Internal server error", 500
-
-
-# ==========================================
-# START APPLICATION
-# ==========================================
-
-init_db()
+# ---------------- START SERVER ----------------
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-
     app.run(
         host="0.0.0.0",
-        port=port,
+        port=int(os.environ.get("PORT", 5000)),
         debug=False
     )
