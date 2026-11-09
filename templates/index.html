@@ -1,992 +1,560 @@
-<!DOCTYPE html>
-<html lang="hi">
+<!doctype html>
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MUZZLE-ID AI | Smart Dairy Management</title>
-
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MUZZLE-ID AI | Smart Cattle Management</title>
 <style>
-:root {
-    --green:#16794b;
-    --dark:#104d34;
-    --light:#eaf7ef;
-    --bg:#f4f8f5;
-    --white:#ffffff;
-    --text:#20352a;
-    --muted:#718078;
-    --orange:#f3a640;
-    --red:#dc5555;
-    --shadow:0 5px 22px rgba(20,70,45,.09);
-}
-
-* {
-    box-sizing:border-box;
-    margin:0;
-    padding:0;
-}
-
-body {
-    font-family:Arial, sans-serif;
-    background:var(--bg);
-    color:var(--text);
-}
-
-header {
-    background:linear-gradient(120deg,#104d34,#168653);
-    color:white;
-    padding:22px 18px;
-    border-radius:0 0 25px 25px;
-}
-
-.top {
-    display:flex;
-    align-items:center;
-    gap:12px;
-}
-
-.logo {
-    width:48px;
-    height:48px;
-    background:white;
-    color:var(--green);
-    border-radius:15px;
-    display:grid;
-    place-items:center;
-    font-size:27px;
-}
-
-header h1 {
-    font-size:21px;
-    letter-spacing:.5px;
-}
-
-header p {
-    font-size:12px;
-    opacity:.9;
-    margin-top:5px;
-}
-
-.header-tag {
-    margin-top:20px;
-    background:#ffffff20;
-    padding:12px;
-    border-radius:12px;
-    font-size:13px;
-}
-
-.container {
-    max-width:900px;
-    margin:auto;
-    padding:16px;
-}
-
-.section-title {
-    font-size:19px;
-    margin:18px 0 13px;
-}
-
-.stats {
-    display:grid;
-    grid-template-columns:repeat(2,1fr);
-    gap:12px;
-}
-
-.card {
-    background:white;
-    padding:17px;
-    border-radius:17px;
-    box-shadow:var(--shadow);
-}
-
-.stat-icon {
-    font-size:25px;
-}
-
-.stat-number {
-    font-size:25px;
-    font-weight:bold;
-    color:var(--green);
-    margin-top:10px;
-}
-
-.stat-label {
-    color:var(--muted);
-    font-size:12px;
-    margin-top:5px;
-}
-
-nav {
-    display:grid;
-    grid-template-columns:repeat(3,1fr);
-    gap:9px;
-    margin:20px 0;
-}
-
-nav button {
-    border:0;
-    padding:12px 5px;
-    background:white;
-    color:var(--dark);
-    border-radius:12px;
-    font-weight:bold;
-    box-shadow:var(--shadow);
-    font-size:12px;
-}
-
-nav button.active {
-    background:var(--green);
-    color:white;
-}
-
-.panel {
-    display:none;
-}
-
-.panel.active {
-    display:block;
-}
-
-input,select,textarea {
-    width:100%;
-    padding:13px;
-    border:1px solid #dce8df;
-    border-radius:11px;
-    margin:7px 0 13px;
-    background:white;
-    font-size:14px;
-    outline:none;
-}
-
-input:focus,select:focus,textarea:focus {
-    border-color:var(--green);
-}
-
-label {
-    font-size:13px;
-    font-weight:bold;
-}
-
-.btn {
-    border:0;
-    padding:13px 17px;
-    border-radius:11px;
-    background:var(--green);
-    color:white;
-    font-weight:bold;
-    cursor:pointer;
-    width:100%;
-    font-size:14px;
-}
-
-.btn-secondary {
-    background:#e7f4eb;
-    color:var(--dark);
-}
-
-.result {
-    margin-top:12px;
-    padding:14px;
-    background:var(--light);
-    border-radius:12px;
-    font-size:14px;
-}
-
-.cow-item {
-    background:white;
-    padding:14px;
-    border-radius:13px;
-    margin:10px 0;
-    box-shadow:var(--shadow);
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    gap:10px;
-}
-
-.cow-item button {
-    background:var(--green);
-    color:white;
-    border:0;
-    padding:9px 12px;
-    border-radius:9px;
-}
-
-.profile {
-    background:white;
-    padding:18px;
-    border-radius:16px;
-    box-shadow:var(--shadow);
-}
-
-.profile h3 {
-    color:var(--green);
-    margin-bottom:12px;
-}
-
-.profile p {
-    padding:8px 0;
-    border-bottom:1px solid #edf1ed;
-    font-size:14px;
-}
-
-.chat-box {
-    background:white;
-    border-radius:15px;
-    padding:15px;
-    min-height:130px;
-    margin:12px 0;
-    box-shadow:var(--shadow);
-}
-
-.chat-message {
-    background:var(--light);
-    padding:12px;
-    border-radius:12px;
-    margin:8px 0;
-    font-size:14px;
-    line-height:1.5;
-}
-
-.small-note {
-    color:var(--muted);
-    font-size:12px;
-    line-height:1.5;
-    margin-top:10px;
-}
-
-footer {
-    text-align:center;
-    padding:25px 10px;
-    color:var(--muted);
-    font-size:12px;
-}
-
-.badge {
-    background:#e5f5e9;
-    color:var(--green);
-    padding:5px 9px;
-    border-radius:20px;
-    font-size:11px;
-}
-
-@media(min-width:650px) {
-    .stats {
-        grid-template-columns:repeat(4,1fr);
-    }
-
-    nav {
-        grid-template-columns:repeat(6,1fr);
-    }
-}
+:root{--navy:#102b25;--green:#176b4b;--mint:#eaf5ef;--gold:#e7b95c;--ink:#1c2b27;--muted:#6d7d76;--line:#e3ebe6}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f5f8f6;color:var(--ink)}
+header{background:linear-gradient(120deg,#102b25,#176b4b);color:white;padding:22px 5%;display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap}
+.brand{font-size:22px;font-weight:800}
+.brand small{display:block;font-size:11px;font-weight:500;opacity:.8;letter-spacing:1.8px;margin-top:4px}
+button{border:0;border-radius:10px;padding:11px 15px;font-weight:700;cursor:pointer;background:var(--green);color:white}
+button.secondary{background:#e9f2ed;color:var(--green)}
+button.danger{background:#a83d3d}
+.wrap{max-width:1200px;margin:24px auto;padding:0 18px}
+.hero{padding:24px;border-radius:18px;background:linear-gradient(110deg,#e5f2e9,#f8f5e9);margin-bottom:20px}
+.hero h1{margin:0 0 8px;font-size:clamp(23px,4vw,34px)}
+.hero p{margin:0;color:#53665d}
+nav{display:flex;gap:8px;overflow:auto;padding:10px 0 16px}
+nav button{white-space:nowrap}
+nav button.active{background:var(--navy)}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.card{background:white;border:1px solid var(--line);border-radius:15px;padding:18px;box-shadow:0 5px 20px #183c2910;margin-bottom:15px}
+.stat{font-size:27px;font-weight:800;color:var(--green);margin-top:8px}
+.muted{color:var(--muted);font-size:13px}
+.section{display:none}
+.section.active{display:block}
+.cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
+h2{font-size:21px;margin:4px 0 16px}
+h3{margin:0 0 12px}
+label{display:block;font-size:13px;font-weight:700;margin:10px 0 5px}
+input,select,textarea{width:100%;padding:11px;border:1px solid #d7e2db;border-radius:9px;background:white;font:inherit}
+textarea{min-height:75px;resize:vertical}
+.formgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px}
+.tablewrap{overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:10px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{color:var(--muted)}
+.pill{display:inline-block;padding:5px 9px;border-radius:30px;background:var(--mint);color:var(--green);font-size:11px;font-weight:700}
+.notice{padding:12px;border-radius:10px;background:#fff6df;color:#71531a;font-size:13px;margin:12px 0}
+.hidden{display:none!important}
+.auth{max-width:520px;margin:30px auto}
+.status{font-size:12px;color:#d7f0df}
+.footer{text-align:center;color:var(--muted);padding:25px;font-size:12px}
+@media(max-width:800px){.grid{grid-template-columns:repeat(2,1fr)}.cols{grid-template-columns:1fr}}
+@media(max-width:480px){header{padding:18px}.grid{gap:8px}.card{padding:13px}.formgrid{grid-template-columns:1fr}.wrap{padding:0 12px}}
 </style>
 </head>
-
 <body>
 
 <header>
-    <div class="top">
-        <div class="logo">🐄</div>
-        <div>
-            <h1>MUZZLE-ID AI</h1>
-            <p>Smart Cattle Identification & Dairy Management</p>
-        </div>
-    </div>
-
-    <div class="header-tag">
-        One Scan, One Identity, Complete Cattle Information.
-        <br><br>
-        <b>Transforming Dairying with AI and IT</b>
-    </div>
+<div class="brand">MUZZLE-ID AI
+<small>SMART CATTLE IDENTITY & DIGITAL MANAGEMENT</small>
+</div>
+<div>
+<span id="who" class="status">Guest mode</span>
+<button id="authBtn" onclick="showAuth()">Login / Register</button>
+<button id="logoutBtn" class="secondary hidden" onclick="logout()">Logout</button>
+</div>
 </header>
 
-<main class="container">
-
-    <h2 class="section-title">📊 Farm Dashboard</h2>
-
-    <div class="stats">
-        <div class="card">
-            <div class="stat-icon">🐄</div>
-            <div class="stat-number" id="totalCows">0</div>
-            <div class="stat-label">Registered Cows</div>
-        </div>
-
-        <div class="card">
-            <div class="stat-icon">🥛</div>
-            <div class="stat-number" id="todayMilk">0</div>
-            <div class="stat-label">Today's Milk (Litres)</div>
-        </div>
-
-        <div class="card">
-            <div class="stat-icon">❤️</div>
-            <div class="stat-number" id="sensorCount">0</div>
-            <div class="stat-label">Sensor Readings</div>
-        </div>
-
-        <div class="card">
-            <div class="stat-icon">📋</div>
-            <div class="stat-number" id="recordCount">0</div>
-            <div class="stat-label">Medical Records</div>
-        </div>
-    </div>
-
-    <nav>
-        <button class="active" onclick="showPanel('dashboard',this)">🏠 Home</button>
-        <button onclick="showPanel('search',this)">🔎 Search</button>
-        <button onclick="showPanel('register',this)">🐄 Register</button>
-        <button onclick="showPanel('health',this)">❤️ Health</button>
-        <button onclick="showPanel('milk',this)">🥛 Milk</button>
-        <button onclick="showPanel('assistant',this)">🤖 AI Help</button>
-    </nav>
-
-    <!-- DASHBOARD -->
-
-    <section id="dashboard" class="panel active">
-
-        <h2 class="section-title">Welcome to MUZZLE-ID AI</h2>
-
-        <div class="card">
-            <h3>🐄 Smart Dairy Management</h3>
-            <p class="small-note">
-                Manage cattle profiles, health information,
-                milk production and medical records from
-                one digital platform.
-            </p>
-            <br>
-            <span class="badge">System Connected</span>
-        </div>
-
-        <h2 class="section-title">📋 All Registered Cows</h2>
-
-        <div id="cowList">
-            <p class="small-note">Loading cow records...</p>
-        </div>
-
-        <button class="btn btn-secondary" onclick="loadDashboard()">
-            🔄 Refresh Dashboard
-        </button>
-    </section>
-
-    <!-- SEARCH -->
-
-    <section id="search" class="panel">
-
-        <h2 class="section-title">🔎 Search Your Cow</h2>
-
-        <div class="card">
-            <label>Enter Cow ID or Name</label>
-            <input id="searchInput" placeholder="Example: 1 or Rani">
-
-            <button class="btn" onclick="searchCow()">
-                Search Cow
-            </button>
-        </div>
-
-        <div id="searchResult"></div>
-        <div id="profileResult"></div>
-    </section>
-
-    <!-- REGISTER -->
-
-    <section id="register" class="panel">
-
-        <h2 class="section-title">🐄 Register New Cow</h2>
-
-        <div class="card">
-
-            <label>Cow Name *</label>
-            <input id="cowName" placeholder="Enter cow name">
-
-            <label>Breed</label>
-            <select id="cowBreed">
-                <option value="">Select Breed</option>
-                <option>Gir</option>
-                <option>Sahiwal</option>
-                <option>Red Sindhi</option>
-                <option>Tharparkar</option>
-                <option>Jersey</option>
-                <option>Holstein Friesian</option>
-                <option>Hariana</option>
-                <option>Murrah Buffalo</option>
-                <option>Other / Unknown</option>
-            </select>
-
-            <label>Age (Years)</label>
-            <input id="cowAge" type="number" min="0" placeholder="Enter age">
-
-            <label>Weight (Kg)</label>
-            <input id="cowWeight" type="number" min="0" step="0.1" placeholder="Enter weight">
-
-            <label>Gender</label>
-            <select id="cowGender">
-                <option value="">Select Gender</option>
-                <option>Female</option>
-                <option>Male</option>
-            </select>
-
-            <button class="btn" onclick="registerCow()">
-                + Register Cow
-            </button>
-
-            <div id="registerResult"></div>
-
-            <p class="small-note">
-                Cow ID सिस्टम द्वारा अपने आप बनाया जाएगा।
-                Breed की जानकारी मालिक द्वारा दर्ज की जाती है।
-            </p>
-        </div>
-    </section>
-
-    <!-- HEALTH -->
-
-    <section id="health" class="panel">
-
-        <h2 class="section-title">❤️ Cow Health Monitoring</h2>
-
-        <div class="card">
-            <label>Cow ID</label>
-            <input id="healthCowId" type="number" placeholder="Enter Cow ID">
-
-            <button class="btn" onclick="loadHealth()">
-                Check Health Records
-            </button>
-
-            <div id="healthResult"></div>
-        </div>
-
-        <p class="small-note">
-            Sensor readings उपलब्ध होने पर यहाँ दिखाई देंगी।
-            DHT22 का तापमान वातावरण का तापमान है, गाय के
-            शरीर का तापमान नहीं। Sensor data स्वास्थ्य का
-            संकेत है, बीमारी का पक्का निदान नहीं।
-        </p>
-    </section>
-
-    <!-- MILK -->
-
-    <section id="milk" class="panel">
-
-        <h2 class="section-title">🥛 Milk Production Records</h2>
-
-        <div class="card">
-
-            <label>Cow ID</label>
-            <input id="milkCowId" type="number" placeholder="Enter Cow ID">
-
-            <label>Milk Quantity (Litres)</label>
-            <input id="milkQuantity" type="number" min="0" step="0.1" placeholder="Example: 5.5">
-
-            <label>Session</label>
-            <select id="milkSession">
-                <option value="morning">Morning</option>
-                <option value="evening">Evening</option>
-            </select>
-
-            <label>Date</label>
-            <input id="milkDate" type="date">
-
-            <label>Notes (Optional)</label>
-            <textarea id="milkNotes" placeholder="Enter notes"></textarea>
-
-            <button class="btn" onclick="saveMilk()">
-                Save Milk Record
-            </button>
-
-            <div id="milkResult"></div>
-        </div>
-
-        <h2 class="section-title">📋 Milk History</h2>
-
-        <div class="card">
-            <label>Filter by Cow ID (Optional)</label>
-            <input id="milkFilterId" type="number" placeholder="Enter Cow ID">
-
-            <button class="btn btn-secondary" onclick="loadMilkHistory()">
-                View Milk History
-            </button>
-
-            <div id="milkHistory"></div>
-        </div>
-    </section>
-
-    <!-- AI ASSISTANT -->
-
-    <section id="assistant" class="panel">
-
-        <h2 class="section-title">🤖 Dairy AI Assistant</h2>
-
-        <div class="card">
-            <p class="small-note">
-                गाय के स्वास्थ्य, चारे और दूध उत्पादन से
-                जुड़े सवाल हिंदी या अंग्रेजी में पूछें।
-            </p>
-
-            <div class="chat-box" id="chatBox">
-                <div class="chat-message">
-                    नमस्ते! मैं MUZZLE-ID AI Demo Assistant हूँ।
-                    आप मुझसे डेयरी मैनेजमेंट के बारे में पूछ सकते हैं।
-                </div>
-            </div>
-
-            <label>Your Question</label>
-            <textarea id="question" placeholder="अपना सवाल यहाँ लिखें..."></textarea>
-
-            <button class="btn" onclick="askAssistant()">
-                Ask Assistant
-            </button>
-        </div>
-
-        <p class="small-note">
-            यह अभी नियम-आधारित Demo Assistant है,
-            इंटरनेट से जानकारी खोजने वाला वास्तविक AI नहीं।
-            स्वास्थ्य संबंधी समस्या में पशु चिकित्सक से सलाह लें।
-        </p>
-    </section>
-
-    <!-- MEDICAL RECORD -->
-
-    <section class="card" style="margin-top:22px;">
-
-        <h2 class="section-title">💉 Add Medical Record</h2>
-
-        <label>Cow ID</label>
-        <input id="recordCowId" type="number" placeholder="Enter Cow ID">
-
-        <label>Record Type</label>
-        <select id="recordType">
-            <option>Vaccination</option>
-            <option>Medical Checkup</option>
-            <option>Medicine</option>
-            <option>Pregnancy</option>
-            <option>Other</option>
-        </select>
-
-        <label>Description</label>
-        <textarea id="recordDescription" placeholder="Enter details"></textarea>
-
-        <button class="btn" onclick="saveRecord()">
-            Save Medical Record
-        </button>
-
-        <div id="recordResult"></div>
-    </section>
-
+<main class="wrap">
+
+<div class="hero">
+<h1>One Scan, One Identity, Complete Cattle Information.</h1>
+<p>AI-enabled vision for smarter dairy management — digital records, health, milk and ownership.</p>
+</div>
+
+<div id="authPanel" class="card auth hidden">
+<h2>Account access</h2>
+<div class="formgrid">
+<div>
+<label>Full name (registration)</label>
+<input id="authName" placeholder="Your name">
+</div>
+<div>
+<label>Email</label>
+<input id="authEmail" type="email" placeholder="name@example.com">
+</div>
+</div>
+<label>Password (minimum 8 characters)</label>
+<input id="authPassword" type="password" placeholder="Password">
+<div class="actions">
+<button onclick="auth('login')">Login</button>
+<button class="secondary" onclick="auth('register')">Create owner account</button>
+<button class="secondary" onclick="showAuth(false)">Close</button>
+</div>
+<div class="muted">Admin accounts are created by the deployment administrator. Public registration cannot create admins.</div>
+</div>
+
+<nav>
+<button class="active" onclick="tab('dashboard',this)">Dashboard</button>
+<button onclick="tab('animals',this)">My Cattle</button>
+<button onclick="tab('health',this)">Health</button>
+<button onclick="tab('vaccines',this)">Vaccination</button>
+<button onclick="tab('milk',this)">Milk Records</button>
+<button onclick="tab('market',this)">Marketplace</button>
+<button onclick="tab('ai',this)">AI & Scan</button>
+<button id="adminNav" class="hidden" onclick="tab('admin',this)">Admin Panel</button>
+</nav>
+
+<section id="dashboard" class="section active">
+<div class="grid">
+<div class="card"><div class="muted">Registered Animals</div><div class="stat" id="sAnimals">0</div></div>
+<div class="card"><div class="muted">Cow Records</div><div class="stat" id="sCows">0</div></div>
+<div class="card"><div class="muted">Buffalo Records</div><div class="stat" id="sBuffalo">0</div></div>
+<div class="card"><div class="muted">Milk Recorded (L)</div><div class="stat" id="sMilk">0</div></div>
+</div>
+<div class="cols">
+<div class="card">
+<h3>Platform overview</h3>
+<p class="muted">Manage animal identity, health history, vaccination schedules and milk production in one place.</p>
+<div id="dashboardInfo" class="pill">Please log in to view your records</div>
+</div>
+<div class="card">
+<h3>Technology status</h3>
+<p><span class="pill">Web application: Online</span></p>
+<p><span class="pill">Database: Connected</span></p>
+<p><span class="pill">Muzzle AI: Not connected</span></p>
+<p><span class="pill">IoT sensors: Not connected</span></p>
+</div>
+</div>
+</section>
+
+<section id="animals" class="section">
+<div class="cols">
+<div class="card">
+<h2>Register animal</h2>
+<div class="formgrid">
+<div><label>Name / ID name</label><input id="aName"></div>
+<div><label>Animal type</label><select id="aType"><option>Cow</option><option>Buffalo</option><option>Other</option></select></div>
+<div><label>Breed</label><input id="aBreed" placeholder="e.g. Gir / Murrah"></div>
+<div><label>Age (years)</label><input id="aAge" type="number" min="0" step=".1"></div>
+<div><label>Gender</label><select id="aGender"><option>Female</option><option>Male</option><option>Unknown</option></select></div>
+<div><label>Weight (kg)</label><input id="aWeight" type="number" min="0"></div>
+<div><label>Ear tag / local ID</label><input id="aTag"></div>
+</div>
+<label>Notes</label><textarea id="aNotes"></textarea>
+<label><input id="aPublic" type="checkbox" style="width:auto"> Make profile public for marketplace listing</label>
+<button onclick="addAnimal()">Save animal</button>
+</div>
+<div class="card">
+<h2>My animal records</h2>
+<div id="animalList" class="muted">Login to load records.</div>
+</div>
+</div>
+</section>
+
+<section id="health" class="section">
+<div class="card">
+<h2>Add health record</h2>
+<div class="formgrid">
+<div><label>Animal</label><select id="hAnimal"></select></div>
+<div><label>Date</label><input id="hDate" type="date"></div>
+</div>
+<label>Observation / treatment</label>
+<textarea id="hDesc" placeholder="Describe observation or vet advice"></textarea>
+<label>Veterinarian name (optional)</label><input id="hVet">
+<div class="actions">
+<button onclick="addHealth()">Save health record</button>
+<button class="secondary" onclick="loadHealth()">View selected animal history</button>
+</div>
+<div id="healthList"></div>
+</div>
+</section>
+
+<section id="vaccines" class="section">
+<div class="card">
+<h2>Vaccination schedule & reminders</h2>
+<div class="formgrid">
+<div><label>Animal</label><select id="vAnimal"></select></div>
+<div><label>Vaccine</label><input id="vName" placeholder="Vaccine name"></div>
+<div><label>Due date</label><input id="vDate" type="date"></div>
+<div><label>Notes</label><input id="vNotes"></div>
+</div>
+<button onclick="addVaccine()">Add reminder</button>
+<div id="vaccineList"></div>
+<div class="notice">Reminder dates are stored in the app. Automatic SMS/email notifications are not configured.</div>
+</div>
+</section>
+
+<section id="milk" class="section">
+<div class="card">
+<h2>Milk production records</h2>
+<div class="formgrid">
+<div><label>Animal</label><select id="mAnimal"></select></div>
+<div><label>Date</label><input id="mDate" type="date"></div>
+<div><label>Quantity (litres)</label><input id="mQty" type="number" min="0" step=".1"></div>
+<div><label>Session</label><select id="mSession"><option>Daily</option><option>Morning</option><option>Evening</option></select></div>
+</div>
+<button onclick="addMilk()">Save milk record</button>
+<div id="milkList"></div>
+</div>
+</section>
+
+<section id="market" class="section">
+<div class="card">
+<h2>Marketplace</h2>
+<p class="muted">Only animals with public profiles can appear in the public listing.</p>
+<div class="formgrid">
+<div><label>Animal</label><select id="pAnimal"></select></div>
+<div><label>Asking price (₹)</label><input id="pPrice" type="number" min="1"></div>
+<div><label>Location</label><input id="pLocation"></div>
+<div><label>Description</label><input id="pDesc"></div>
+</div>
+<button onclick="addListing()">Create listing</button>
+<div id="marketList"></div>
+</div>
+</section>
+
+<section id="ai" class="section">
+<div class="cols">
+<div class="card">
+<h2>AI Assistant (Demo)</h2>
+<label>Your question</label>
+<textarea id="aiQuestion" placeholder="Ask about cattle record keeping..."></textarea>
+<button onclick="askAI()">Ask assistant</button>
+<div id="aiAnswer" class="notice hidden"></div>
+</div>
+<div class="card">
+<h2>Muzzle-ID Scan</h2>
+<p class="muted">A trained and connected muzzle recognition model is required for real identification.</p>
+<input type="file" accept="image/*" id="scanImage">
+<button onclick="scanNotice()">Check scan status</button>
+<div id="scanStatus" class="notice">Model not connected.</div>
+<h3>Breed reference</h3>
+<div id="breedList" class="muted">Loading breed list...</div>
+</div>
+</div>
+</section>
+
+<section id="admin" class="section">
+<div class="card">
+<h2>Administrator Control Center</h2>
+<p class="muted">Platform-wide oversight. Owner records are private to their accounts.</p>
+<div class="grid">
+<div><div class="muted">All animals</div><div class="stat" id="adAnimals">0</div></div>
+<div><div class="muted">Registered owners</div><div class="stat" id="adOwners">0</div></div>
+<div><div class="muted">Health records</div><div class="stat" id="adHealth">0</div></div>
+<div><div class="muted">Marketplace listings</div><div class="stat" id="adMarket">0</div></div>
+</div>
+<h3>Users & role management</h3>
+<div id="adminUsers"></div>
+<h3>All registered animals</h3>
+<div id="adminAnimals"></div>
+</div>
+</section>
+
+<div id="msg" class="notice hidden"></div>
 </main>
 
-<footer>
-    <b>MUZZLE-ID AI</b>
-    <br>
-    Smart Cattle Identification & Dairy Management System
-    <br><br>
-    National Milk Day Celebration 2026
-    <br>
-    United University, Prayagraj
-    <br><br>
-    Developed by Team MUZZLE-ID AI
-</footer>
+<div class="footer">MUZZLE-ID AI • National Milk Day Celebration 2026 • Academic Demonstration Prototype</div>
 
 <script>
+const $=id=>document.getElementById(id);
+let me=null, animals=[];
 
-const API = "";
-
-function showPanel(id,button) {
-    document.querySelectorAll(".panel").forEach(p => {
-        p.classList.remove("active");
-    });
-
-    document.getElementById(id).classList.add("active");
-
-    document.querySelectorAll("nav button").forEach(b => {
-        b.classList.remove("active");
-    });
-
-    button.classList.add("active");
-
-    if(id === "dashboard") loadDashboard();
+function message(t){
+$('msg').textContent=t;
+$('msg').classList.remove('hidden');
+setTimeout(()=>$('msg').classList.add('hidden'),4500);
 }
 
-async function api(url,options={}) {
-    const response = await fetch(API + url,{
-        ...options,
-        headers:{
-            "Content-Type":"application/json",
-            ...(options.headers || {})
-        }
-    });
-
-    const data = await response.json();
-
-    if(!response.ok) {
-        throw new Error(data.error || "Something went wrong");
-    }
-
-    return data;
+async function api(path,opts={}){
+let r=await fetch(path,{
+credentials:'same-origin',
+...opts,
+headers:{'Content-Type':'application/json',...(opts.headers||{})}
+});
+let j=await r.json().catch(()=>({message:'Invalid server response'}));
+if(!r.ok||j.success===false)throw Error(j.message||'Request failed');
+return j.data??j;
 }
 
-function message(id,text) {
-    document.getElementById(id).innerHTML =
-        `<div class="result">${escapeHTML(text)}</div>`;
+function tab(id,btn){
+document.querySelectorAll('.section').forEach(x=>x.classList.remove('active'));
+$(id).classList.add('active');
+document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));
+if(btn)btn.classList.add('active');
+if(id==='admin')loadAdmin();
+if(id==='market')loadMarket();
+if(id==='vaccines')loadVaccines();
+if(id==='milk')loadMilk();
 }
 
-function escapeHTML(value) {
-    return String(value ?? "").replace(/[&<>"']/g, char => ({
-        "&":"&amp;",
-        "<":"&lt;",
-        ">":"&gt;",
-        '"':"&quot;",
-        "'":"&#39;"
-    })[char]);
+function showAuth(v=true){
+$('authPanel').classList.toggle('hidden',!v);
 }
 
-// DASHBOARD
-
-async function loadDashboard() {
-    try {
-        const data = await api("/api/dashboard");
-
-        document.getElementById("totalCows").textContent =
-            data.total_cows;
-
-        document.getElementById("todayMilk").textContent =
-            Number(data.today_milk_liters).toFixed(1);
-
-        document.getElementById("sensorCount").textContent =
-            data.total_sensor_readings;
-
-        document.getElementById("recordCount").textContent =
-            data.total_medical_records;
-
-        const cows = await api("/api/cows");
-
-        const list = document.getElementById("cowList");
-
-        if(cows.length === 0) {
-            list.innerHTML =
-                '<div class="card">अभी कोई गाय रजिस्टर नहीं है। Register सेक्शन से पहली गाय जोड़ें।</div>';
-            return;
-        }
-
-        list.innerHTML = cows.map(cow => `
-            <div class="cow-item">
-                <div>
-                    <b>🐄 ${escapeHTML(cow.name)}</b>
-                    <p class="small-note">
-                        ID: ${cow.id} | ${escapeHTML(cow.breed || "Breed not added")}
-                    </p>
-                </div>
-                <button onclick="openCow(${cow.id})">View</button>
-            </div>
-        `).join("");
-
-    } catch(error) {
-        console.error(error);
-        document.getElementById("cowList").textContent =
-            "Dashboard load नहीं हुआ। Backend चालू है या नहीं, जाँचें।";
-    }
+async function auth(mode){
+try{
+let data={
+name:$('authName').value,
+email:$('authEmail').value,
+password:$('authPassword').value
+};
+let result=await api('/api/'+mode,{
+method:'POST',
+body:JSON.stringify(data)
+});
+me=result.user;
+showAuth(false);
+await refresh();
+message(mode==='login'?'Welcome back.':'Owner account created.');
+}catch(e){message(e.message)}
 }
 
-// REGISTER COW
-
-async function registerCow() {
-    const name = document.getElementById("cowName").value.trim();
-
-    if(!name) {
-        message("registerResult","कृपया गाय का नाम लिखें।");
-        return;
-    }
-
-    const data = {
-        name:name,
-        breed:document.getElementById("cowBreed").value,
-        age:document.getElementById("cowAge").value || null,
-        weight:document.getElementById("cowWeight").value || null,
-        gender:document.getElementById("cowGender").value
-    };
-
-    try {
-        const result = await api("/api/cows",{
-            method:"POST",
-            body:JSON.stringify(data)
-        });
-
-        message(
-            "registerResult",
-            "गाय सफलतापूर्वक रजिस्टर हुई! Cow ID: " + result.cow.id
-        );
-
-        document.getElementById("cowName").value = "";
-        document.getElementById("cowAge").value = "";
-        document.getElementById("cowWeight").value = "";
-
-        loadDashboard();
-
-    } catch(error) {
-        message("registerResult",error.message);
-    }
+async function logout(){
+try{
+await api('/api/logout',{method:'POST'});
+me=null;
+animals=[];
+await refresh();
+}catch(e){message(e.message)}
 }
 
-// SEARCH COW
+async function refresh(){
+try{
+let u=await api('/api/me');
+me=u;
+$('who').textContent=me?`${me.name} • ${me.role}`:'Guest mode';
+$('authBtn').classList.toggle('hidden',!!me);
+$('logoutBtn').classList.toggle('hidden',!me);
+$('adminNav').classList.toggle('hidden',!me||me.role!=='admin');
 
-async function searchCow() {
-    const value = document.getElementById("searchInput").value.trim();
+let d=await api('/api/dashboard');
+$('sAnimals').textContent=d.total_cattle||0;
+$('sCows').textContent=d.total_cows||0;
+$('sBuffalo').textContent=d.total_buffalo||0;
+$('sMilk').textContent=Number(d.total_milk_liters||0).toFixed(1);
+$('dashboardInfo').textContent=me?'Signed in — your records are private to your account.':'Please log in to manage animal records.';
 
-    const resultBox = document.getElementById("searchResult");
-    const profileBox = document.getElementById("profileResult");
-
-    resultBox.innerHTML = "";
-    profileBox.innerHTML = "";
-
-    if(!value) {
-        message("searchResult","Cow ID या नाम लिखें।");
-        return;
-    }
-
-    try {
-        const cows = await api("/api/cows");
-
-        const cow = cows.find(item =>
-            String(item.id) === value ||
-            item.name.toLowerCase() === value.toLowerCase()
-        );
-
-        if(!cow) {
-            message("searchResult","इस नाम या ID की गाय नहीं मिली।");
-            return;
-        }
-
-        await openCow(cow.id);
-
-    } catch(error) {
-        message("searchResult",error.message);
-    }
+if(me){
+animals=await api('/api/cows');
+renderAnimals();
+fillAnimalSelects();
+}else{
+$('animalList').textContent='Login to load records.';
+animals=[];
+}
+}catch(e){message(e.message)}
 }
 
-// COW PROFILE
-
-async function openCow(id) {
-    try {
-        const data = await api("/api/cows/" + id);
-        const cow = data.cow;
-
-        document.getElementById("profileResult").innerHTML = `
-            <div class="profile">
-                <h3>🐄 Cow Profile</h3>
-                <p><b>Cow ID:</b> ${cow.id}</p>
-                <p><b>Name:</b> ${escapeHTML(cow.name)}</p>
-                <p><b>Breed:</b> ${escapeHTML(cow.breed || "Not added")}</p>
-                <p><b>Age:</b> ${cow.age ?? "Not added"}</p>
-                <p><b>Weight:</b> ${cow.weight ?? "Not added"} kg</p>
-                <p><b>Gender:</b> ${escapeHTML(cow.gender || "Not added")}</p>
-                <p><b>Medical Records:</b> ${data.records.length}</p>
-                <p><b>Sensor Readings:</b> ${data.sensors.length}</p>
-                <br>
-                <button class="btn btn-secondary"
-                    onclick="document.getElementById('healthCowId').value=${cow.id};showPanel('health',document.querySelectorAll('nav button')[3]);loadHealth();">
-                    View Health
-                </button>
-            </div>
-        `;
-
-    } catch(error) {
-        message("profileResult",error.message);
-    }
+function renderAnimals(){
+$('animalList').innerHTML=animals.length?
+`<div class="tablewrap"><table>
+<tr><th>ID</th><th>Name</th><th>Type</th><th>Breed</th><th>Age</th><th>Action</th></tr>
+${animals.map(a=>`<tr><td>${a.id}</td><td>${esc(a.name)}</td><td>${esc(a.animal_type)}</td><td>${esc(a.breed)}</td><td>${a.age}</td><td><button class="danger" onclick="deleteAnimal(${a.id})">Delete</button></td></tr>`).join('')}
+</table></div>`:'No animals registered yet.';
 }
 
-// HEALTH
-
-async function loadHealth() {
-    const id = document.getElementById("healthCowId").value;
-
-    if(!id) {
-        message("healthResult","Cow ID लिखें।");
-        return;
-    }
-
-    try {
-        const data = await api("/api/health/" + id);
-
-        let html = `
-            <div class="result">
-            <b>🐄 ${escapeHTML(data.cow_name)}</b><br>
-            Cow ID: ${data.cow_id}<br><br>
-        `;
-
-        if(data.latest_health_data) {
-            const s = data.latest_health_data;
-
-            html += `
-                Temperature: ${s.temperature ?? "N/A"}<br>
-                Humidity: ${s.humidity ?? "N/A"}<br>
-                Activity: ${s.activity ?? "N/A"}<br>
-                Heart Rate: ${s.heart_rate ?? "N/A"}<br>
-                Recorded: ${escapeHTML(s.recorded_at)}
-            `;
-        } else {
-            html += "अभी कोई Sensor Data उपलब्ध नहीं है।";
-        }
-
-        html += "</div>";
-
-        document.getElementById("healthResult").innerHTML = html;
-
-    } catch(error) {
-        message("healthResult",error.message);
-    }
+function esc(s){
+return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
-// MILK RECORD
-
-async function saveMilk() {
-    const cowId = document.getElementById("milkCowId").value;
-    const quantity = document.getElementById("milkQuantity").value;
-
-    if(!cowId || quantity === "") {
-        message("milkResult","Cow ID और Milk Quantity जरूरी हैं।");
-        return;
-    }
-
-    const data = {
-        cow_id:cowId,
-        quantity:quantity,
-        session:document.getElementById("milkSession").value,
-        date:document.getElementById("milkDate").value || null,
-        notes:document.getElementById("milkNotes").value
-    };
-
-    try {
-        await api("/api/milk",{
-            method:"POST",
-            body:JSON.stringify(data)
-        });
-
-        message("milkResult","Milk Record सफलतापूर्वक सेव हो गया।");
-
-        document.getElementById("milkQuantity").value = "";
-
-        loadDashboard();
-
-    } catch(error) {
-        message("milkResult",error.message);
-    }
+function fillAnimalSelects(){
+['hAnimal','vAnimal','mAnimal','pAnimal'].forEach(id=>{
+$(id).innerHTML=animals.map(a=>`<option value="${a.id}">${esc(a.name)} (#${a.id})</option>`).join('');
+});
 }
 
-// MILK HISTORY
-
-async function loadMilkHistory() {
-    const id = document.getElementById("milkFilterId").value;
-
-    const url = id
-        ? "/api/milk?cow_id=" + encodeURIComponent(id)
-        : "/api/milk";
-
-    try {
-        const records = await api(url);
-
-        const box = document.getElementById("milkHistory");
-
-        if(records.length === 0) {
-            box.innerHTML = "<p class='small-note'>कोई Milk Record नहीं मिला।</p>";
-            return;
-        }
-
-        box.innerHTML = records.map(item => `
-            <div class="result">
-                <b>${escapeHTML(item.cow_name)}</b><br>
-                Cow ID: ${item.cow_id}<br>
-                Milk: ${item.quantity} Litres<br>
-                Session: ${escapeHTML(item.session)}<br>
-                Date: ${escapeHTML(item.date)}
-            </div>
-        `).join("");
-
-    } catch(error) {
-        message("milkHistory",error.message);
-    }
+async function addAnimal(){
+try{
+let d={
+name:$('aName').value,
+animal_type:$('aType').value,
+breed:$('aBreed').value,
+age:$('aAge').value,
+gender:$('aGender').value,
+weight:$('aWeight').value,
+tag_id:$('aTag').value,
+notes:$('aNotes').value,
+public_profile:$('aPublic').checked
+};
+await api('/api/cows',{method:'POST',body:JSON.stringify(d)});
+$('aName').value='';
+await refresh();
+message('Animal registered.');
+}catch(e){message(e.message)}
 }
 
-// MEDICAL RECORD
-
-async function saveRecord() {
-    const cowId = document.getElementById("recordCowId").value;
-    const description =
-        document.getElementById("recordDescription").value.trim();
-
-    if(!cowId || !description) {
-        message("recordResult","Cow ID और Description लिखें।");
-        return;
-    }
-
-    const data = {
-        cow_id:cowId,
-        record_type:document.getElementById("recordType").value,
-        description:description
-    };
-
-    try {
-        await api("/api/records",{
-            method:"POST",
-            body:JSON.stringify(data)
-        });
-
-        message("recordResult","Medical Record सेव हो गया।");
-
-        document.getElementById("recordDescription").value = "";
-
-        loadDashboard();
-
-    } catch(error) {
-        message("recordResult",error.message);
-    }
+async function deleteAnimal(id){
+if(!confirm('Delete this animal and its linked records?'))return;
+try{
+await api('/api/cows/'+id,{method:'DELETE'});
+await refresh();
+message('Animal deleted.');
+}catch(e){message(e.message)}
 }
 
-// DEMO ASSISTANT
-
-async function askAssistant() {
-    const question = document.getElementById("question").value.trim();
-
-    if(!question) return;
-
-    const box = document.getElementById("chatBox");
-
-    box.innerHTML += `
-        <div class="chat-message">
-            <b>You:</b> ${escapeHTML(question)}
-        </div>
-    `;
-
-    document.getElementById("question").value = "";
-
-    try {
-        const data = await api("/api/assistant",{
-            method:"POST",
-            body:JSON.stringify({question:question})
-        });
-
-        box.innerHTML += `
-            <div class="chat-message">
-                <b>🤖 MUZZLE-ID AI:</b><br>
-                ${escapeHTML(data.answer)}
-            </div>
-        `;
-
-    } catch(error) {
-        box.innerHTML += `
-            <div class="chat-message">
-                Assistant error: ${escapeHTML(error.message)}
-            </div>
-        `;
-    }
-
-    box.scrollTop = box.scrollHeight;
+async function addHealth(){
+try{
+await api('/api/records',{
+method:'POST',
+body:JSON.stringify({
+animal_id:$('hAnimal').value,
+date:$('hDate').value,
+description:$('hDesc').value,
+vet_name:$('hVet').value
+})
+});
+$('hDesc').value='';
+message('Health record saved.');
+loadHealth();
+}catch(e){message(e.message)}
 }
 
-// INITIAL LOAD
+async function loadHealth(){
+try{
+let rows=await api('/api/health/'+$('hAnimal').value);
+$('healthList').innerHTML=rows.map(r=>
+`<p><b>${esc(r.record_date)}</b> — ${esc(r.description)} <span class="pill">${esc(r.status)}</span></p>`
+).join('')||'No health records.';
+}catch(e){message(e.message)}
+}
 
-document.getElementById("milkDate").value =
-    new Date().toISOString().slice(0,10);
+async function addVaccine(){
+try{
+await api('/api/vaccinations',{
+method:'POST',
+body:JSON.stringify({
+animal_id:$('vAnimal').value,
+vaccine:$('vName').value,
+due_date:$('vDate').value,
+notes:$('vNotes').value
+})
+});
+message('Vaccination reminder added.');
+loadVaccines();
+}catch(e){message(e.message)}
+}
 
-loadDashboard();
+async function loadVaccines(){
+if(!me)return;
+try{
+let rows=await api('/api/vaccinations');
+$('vaccineList').innerHTML='<h3>Saved reminders</h3>'+
+rows.map(v=>`<p>${esc(v.animal_name)} — ${esc(v.vaccine)} — ${esc(v.due_date)} <span class="pill">${esc(v.status)}</span></p>`).join('');
+}catch(e){message(e.message)}
+}
 
+async function addMilk(){
+try{
+await api('/api/milk',{
+method:'POST',
+body:JSON.stringify({
+animal_id:$('mAnimal').value,
+date:$('mDate').value,
+quantity:$('mQty').value,
+session:$('mSession').value
+})
+});
+message('Milk record saved.');
+loadMilk();
+refresh();
+}catch(e){message(e.message)}
+}
+
+async function loadMilk(){
+if(!me)return;
+try{
+let rows=await api('/api/milk');
+$('milkList').innerHTML='<h3>Milk history</h3><div class="tablewrap"><table><tr><th>Date</th><th>Animal</th><th>Session</th><th>Litres</th></tr>'+
+rows.map(m=>`<tr><td>${esc(m.record_date)}</td><td>${esc(m.animal_name)}</td><td>${esc(m.session)}</td><td>${m.quantity}</td></tr>`).join('')+
+'</table></div>';
+}catch(e){message(e.message)}
+}
+
+async function addListing(){
+try{
+await api('/api/marketplace',{
+method:'POST',
+body:JSON.stringify({
+animal_id:$('pAnimal').value,
+price:$('pPrice').value,
+location:$('pLocation').value,
+description:$('pDesc').value
+})
+});
+message('Listing created.');
+loadMarket();
+}catch(e){message(e.message)}
+}
+
+async function loadMarket(){
+try{
+let rows=await api('/api/marketplace');
+$('marketList').innerHTML='<h3>Public listings</h3>'+
+rows.map(x=>`<p><b>${esc(x.animal_name)}</b> • ${esc(x.breed)} • ₹${x.price} • ${esc(x.location)} <span class="pill">${esc(x.status)}</span></p>`).join('')||
+'No public listings yet.';
+}catch(e){message(e.message)}
+}
+
+async function askAI(){
+try{
+let r=await api('/api/assistant',{
+method:'POST',
+body:JSON.stringify({message:$('aiQuestion').value})
+});
+$('aiAnswer').textContent=r.answer;
+$('aiAnswer').classList.remove('hidden');
+}catch(e){message(e.message)}
+}
+
+function scanNotice(){
+$('scanStatus').textContent='Scan is not active: no trained muzzle-recognition model is connected yet.';
+}
+
+async function loadBreeds(){
+try{
+let b=await api('/api/breeds');
+$('breedList').innerHTML=Object.entries(b).map(([k,v])=>
+`<p><b>${k}:</b> ${v.join(', ')}</p>`
+).join('');
+}catch(e){$('breedList').textContent='Breed reference unavailable.'}
+}
+
+async function loadAdmin(){
+if(!me||me.role!=='admin')return;
+try{
+let [d,users,all]=await Promise.all([
+api('/api/dashboard'),
+api('/api/admin/users'),
+api('/api/admin/animals')
+]);
+$('adAnimals').textContent=d.total_cattle;
+$('adOwners').textContent=d.total_owners;
+$('adHealth').textContent=d.total_health_records;
+$('adMarket').textContent=d.marketplace_listings;
+
+$('adminUsers').innerHTML='<div class="tablewrap"><table><tr><th>Name</th><th>Email</th><th>Role</th><th>Change role</th></tr>'+
+users.map(u=>`<tr><td>${esc(u.name)}</td><td>${esc(u.email)}</td><td>${u.role}</td><td><button class="secondary" onclick="setRole(${u.id},'${u.role==='admin'?'owner':'admin'}')">Make ${u.role==='admin'?'Owner':'Admin'}</button></td></tr>`).join('')+
+'</table></div>';
+
+$('adminAnimals').innerHTML='<div class="tablewrap"><table><tr><th>ID</th><th>Animal</th><th>Owner</th><th>Breed</th><th>Type</th></tr>'+
+all.map(a=>`<tr><td>${a.id}</td><td>${esc(a.name)}</td><td>${esc(a.owner_name)} (${esc(a.owner_email)})</td><td>${esc(a.breed)}</td><td>${esc(a.animal_type)}</td></tr>`).join('')+
+'</table></div>';
+}catch(e){message(e.message)}
+}
+
+async function setRole(id,role){
+if(!confirm(`Change this user's role to ${role}?`))return;
+try{
+await api(`/api/admin/users/${id}/role`,{
+method:'POST',
+body:JSON.stringify({role})
+});
+loadAdmin();
+}catch(e){message(e.message)}
+}
+
+$('hDate').value=$('mDate').value=new Date().toISOString().slice(0,10);
+refresh();
+loadBreeds();
 </script>
-
 </body>
 </html>
